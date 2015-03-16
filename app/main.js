@@ -1,25 +1,24 @@
 angular = require('angular')
 var vm = require('vm');
 var turf = require('turf');
+window._ = require('lodash');
 
 var map = null;
-var drawFeatures = null;
 var mapFeatures = null;
 
 angular.module('turf-playground', []).run(function () {
     L.mapbox.accessToken = 'pk.eyJ1IjoidGNxbCIsImEiOiJaSlZ6X3JZIn0.mPwXgf3BvAR4dPuBB3ypfA'
     map = L.mapbox.map('map', 'tcql.lffb55nc');
     mapFeatures = L.featureGroup().addTo(map);
-    drawFeatures = L.featureGroup().addTo(map);
 
     var drawControl = new L.Control.Draw({
         edit: {
-            featureGroup: drawFeatures
+            featureGroup: mapFeatures
         }
     }).addTo(map);
 
     map.on('draw:created', function(e) {
-        drawFeatures.addLayer(e.layer);
+        mapFeatures.addLayer(e.layer);
     });
 
 }).directive('playgroundAce', function () {
@@ -67,7 +66,7 @@ angular.module('turf-playground', []).run(function () {
     });
 
     var buildGeomList = function() {
-        var geoms = {}
+        var geoms = {};
         $scope.geometries.forEach(function (elem) {
             geoms[elem.name] = elem.geom.toGeoJSON()
         });
@@ -76,25 +75,37 @@ angular.module('turf-playground', []).run(function () {
 
     $scope.deleteGeometry = function(geom) {
         $scope.geometries.splice(geom, 1);
-        drawFeatures.removeLayer(geom.geom);
+        mapFeatures.removeLayer(geom.geom);
     };
 
     $scope.run = function () {
-        var code = $scope.tools.editor.getValue();
-        console.log(code);
+        var code = $scope.tools.editor.getValue();1
         var geoms = buildGeomList();
         vm.runInNewContext(code, {
             map: map,
             mapFeatures: mapFeatures,
             turf: turf,
             L: L,
-            g: geoms
+            g: geoms,
+            _: _
+        });
+
+        $scope.emptyDraw()
+        _.each(geoms, function (val, key) {
+            try {
+                var geom = L.geoJson(val).addTo(mapFeatures);
+                $scope.geometries.push({name: key, geom: geom})
+            } catch (e) {
+                // TODO: error console / popup
+                console.log(e)
+            }
         });
     };
 
-    // var editor = ace.edit("editor");
-    // editor.setTheme("ace/theme/monokai");
-    // editor.getSession().setMode("ace/mode/javascript");
+    $scope.emptyDraw = function () {
+        mapFeatures.clearLayers();
+        $scope.geometries = [];
+    };
 });
 
 $(function () {

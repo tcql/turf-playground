@@ -13,8 +13,11 @@
             <div id="pane">
                 <div ng-show='selected_tab.name == "editor"' id="editor" playground-ace="tools"></div>
                 <div id="geometries" ng-show='selected_tab.name == "geometries"'>
-                    <p ng-show="geometries.length == 0">
-                        No Geometries added yet. Use the draw tools to create some!
+                    <p>
+                        <span ng-show="geometries.length == 0">
+                            No Geometries added yet.
+                        </span>
+                        Use the draw tools to add some geometries!
                     </p>
                     <ul>
                         <li ng-repeat='geom in geometries'>
@@ -30,7 +33,7 @@
                     <div data-name='geometries' class='tab'>Geometries</div>
                 </div>
                 <div id="buttons">
-                <a id="clear" class="pure-button" href="#">Clear Map</a>
+                <a id="clear" ng-click='emptyDraw()' class="pure-button" href="#">Clear Map</a>
                 <a id="run" ng-click='run()' class="pure-button pure-button-primary" href="#">Run</a>
                 </div>
             </div>
