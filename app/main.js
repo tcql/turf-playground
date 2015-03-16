@@ -73,6 +73,22 @@ angular.module('turf-playground', []).run(function () {
         return geoms;
     }
 
+    var addGeoJson = function (json) {
+        return L.geoJson(json, {
+            onEachFeature: function (feature, layer) {
+
+                table = "<h4>Properties</h4><table class='pure-table'>"
+                    + "<thead><tr><th>Key</th><th>Value</th></tr></thead>"
+                    + "<tbody";
+                _.each(feature.properties, function (val, key) {
+                    table += "<tr><td>"+key+"</td><td>"+val+"</td></tr>";
+                });
+                table += "</tbody></table>";
+                layer.bindPopup(table);
+            }
+        }).addTo(mapFeatures);
+    };
+
     $scope.deleteGeometry = function(geom) {
         $scope.geometries.splice(geom, 1);
         mapFeatures.removeLayer(geom.geom);
@@ -93,7 +109,8 @@ angular.module('turf-playground', []).run(function () {
         $scope.emptyDraw()
         _.each(geoms, function (val, key) {
             try {
-                var geom = L.geoJson(val).addTo(mapFeatures);
+                var geom = addGeoJson(val);
+
                 $scope.geometries.push({name: key, geom: geom})
             } catch (e) {
                 // TODO: error console / popup
