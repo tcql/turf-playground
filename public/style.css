@@ -1,11 +1,13 @@
 #pane {
     position: absolute;
-    background-color:#111;
-    color: #eee;
+    background-color:#eee;
+    /*background-color:#111;
+    color: #eee;*/
     top: 0;
     width:50%;
     bottom: 50px;
     left: 0;
+    overflow:auto;
 }
 #geometries {
     padding: 10px;
