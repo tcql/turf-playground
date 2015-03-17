@@ -1,0 +1,8 @@
+{
+    "name": "javascript.util",
+    "devDependencies": {
+        "closure-compiler": "http://dl.google.com/closure-compiler/compiler-latest.zip",
+        "closure-library": "google/closure-library#master",
+        "closurecompiler-externs": "dcodeIO/node.js-closure-compiler-externs#^1.0.4"
+    }
+}
