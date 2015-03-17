@@ -8,6 +8,10 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
     $scope.geometries = [];
     $scope.geom_id = 0;
 
+    $scope.$on('$includeContentLoaded', function () {
+        prettyPrint();
+    })
+
     // Builds dictionary of geojson geometries, which will be
     // accessible in the editor environment
     var buildGeomList = function() {
@@ -66,6 +70,15 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
     // When a shape is created using L.Draw, add it to our internal geometries list
     $map.on('draw:created', function(e) {
         addToGeometries(e.layer)
+        $scope.$apply();
+    });
+
+    $map.on('draw:deleted', function (e) {
+        console.log("DEELTING")
+        var layers = e.layers;
+        layers.eachLayer(function (layer) {
+            _.remove($scope.geometries, {geom: layer});
+        });
         $scope.$apply();
     });
 

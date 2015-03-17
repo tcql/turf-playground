@@ -17,7 +17,6 @@ angular.module('turf-playground', []).config(function ($provide) {
         mapFeatures.addLayer(e.layer);
     });
 
-    console.log("CONFIGGERING")
     $provide.value("$map", map);
     $provide.value("$mapFeatures", mapFeatures);
 });

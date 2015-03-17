@@ -5,38 +5,41 @@
         <link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.css' rel='stylesheet' />
         <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
         <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.css' rel='stylesheet' />
+        <link href='http://google-code-prettify.googlecode.com/svn/trunk/styles/sunburst.css' rel='stylesheet' />
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js">
+        </script>
     </head>
     <body ng-app='turf-playground'>
 
-        <div ng-controller='MainCtrl'>
-            <div id="pane">
+        <div id="pane" ng-controller='MainCtrl'>
+            <div id="pane-content">
                 <div ng-show='selected_tab.name == "editor"' id="editor" playground-ace="tools"></div>
-                <div id="geometries" ng-show='selected_tab.name == "geometries"'>
-                    <p>
-                        <span ng-show="geometries.length == 0">
-                            No Geometries added yet.
-                        </span>
-                        Use the draw tools to add some geometries!
-                    </p>
-                    <form class='pure-form'>
-                        <table class='pure-table pure-table-horizontal'>
-                            <tr ng-repeat='geom in geometries'>
-                                <td>
-                                    g.<input type='text' ng-model='geom.name' spellcheck='false' />
-                                </td>
-                                <td>
-                                    <a ng-click='deleteGeometry(geom)' class="pure-button" href="#">Delete</a>
-                                </td>
-                            </tr>
-                        </table>
-                    </form>
+
+                <div id="geometries"
+                    ng-show='selected_tab.name == "geometries"'
+                    ng-include="'public/views/geometries.html'"
+                >
+                </div>
+
+                <div id="help"
+                    ng-show='selected_tab.name == "help"'
+                    ng-include="'public/views/help.html'"
+                >
                 </div>
             </div>
 
             <div id="control">
                 <div playground-tabs="selected_tab" id="tabs" style='float:left'>
-                    <div data-name='editor' class='tab selected'>Editor</div>
-                    <div data-name='geometries' class='tab'>Geometries</div>
+                    <div data-name='editor' class='tab selected'>
+                        <i class='fa fa-code'></i> Editor
+                    </div>
+                    <div data-name='geometries' class='tab'>
+                        <i class="fa fa-plus-square"></i> Geometries
+                    </div>
+                    <div data-name='help' class='tab'>
+                        <i class="fa fa-question-circle"></i> Help
+                    </div>
                 </div>
                 <div id="buttons">
                 <a id="clear" ng-click='emptyDraw()' class="pure-button" href="#">Clear Map</a>

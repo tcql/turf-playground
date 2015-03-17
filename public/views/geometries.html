@@ -1,0 +1,19 @@
+<p>
+    <span ng-show="geometries.length == 0">
+        No Geometries added yet.
+    </span>
+    Use the draw tools to add some geometries!
+</p>
+
+<form class='pure-form'>
+    <table class='pure-table pure-table-horizontal'>
+        <tr ng-repeat='geom in geometries'>
+            <td>
+                g.<input type='text' ng-model='geom.name' spellcheck='false' />
+            </td>
+            <td>
+                <a ng-click='deleteGeometry(geom)' class="pure-button" href="#">Delete</a>
+            </td>
+        </tr>
+    </table>
+</form>
