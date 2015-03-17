@@ -14,13 +14,14 @@ angular.module('turf-playground', []).config(function ($provide) {
     }).addTo(map);
 
     map.on('draw:created', function(e) {
-        mapFeatures.addLayer(e.layer);
+        // mapFeatures.addLayer(e.layer);
     });
 
     $provide.value("$map", map);
     $provide.value("$mapFeatures", mapFeatures);
 });
 
-require('./directives/playgroundAce')
-require('./directives/playgroundTabs')
-require('./controllers/MainCtrl')
+require('./directives/playgroundAce');
+require('./directives/playgroundTabs');
+require('./services/timerService');
+require('./controllers/MainCtrl');
