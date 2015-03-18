@@ -13,7 +13,6 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
 
     $scope.$watch("geojsons", function (geojsons, old) {
         if ($scope.watching_geojsons) {
-            console.log("watch triggered")
             $scope.watching_geojsons = false;
             // TODO: Only clear the layers that changed?
             // this could get really slow.
@@ -22,17 +21,13 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
             _.each(geojsons, function (val, key) {
                 try {
                     var geom = addToMap(val, key);
-                    $scope.geometries.push({name: key, new_name:key, geojson: val, geom: geom});
                 } catch (e) {
                     // TODO: error console / popup
                     console.log(e)
                 }
             });
             $scope.watching_geojsons = true;
-        } else {
-            console.log("watch disabled");
         }
-
     }, true);
 
     // TODO: make this a directive. It shouldn't be in here.
@@ -47,10 +42,14 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
             $scope.geom_id++;
             name = "feature"+$scope.geom_id
         }
-        // $scope.geometries[name] = layer
-        $scope.geojsons[name] = layer.toGeoJSON()
-        layer.__playground_name = name
-        // $scope.geometries.push({name:name, geom: layer})
+        var geojson = layer.toGeoJSON();
+        $scope.geojsons[name] = geojson;
+        $scope.geometries.push({
+            name: name,
+            new_name: name,
+            geojson: geojson,
+            geom: layer
+        });
     };
 
     var addToMap = function (json, name) {
@@ -99,14 +98,17 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
     $map.on('draw:deleted', function (e) {
         var layers = e.layers;
         layers.eachLayer(function (layer) {
-            _.remove($scope.geometries, {geom: layer});
+            var geoms = _.where($scope.geometries, {geom: layer})
+
+            _.each(geoms, function (elem) {
+                $scope.deleteGeometry(elem);
+            });
         });
         $scope.$apply();
     });
 
 
     $scope.updateGeometryName = function (geom) {
-        console.log("UPDATING!")
         $scope.watching_geojsons = false;
         delete $scope.geojsons[geom.name];
         $scope.watching_geojsons = true;
@@ -115,10 +117,8 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
 
     $scope.deleteGeometry = function(geom) {
         delete $scope.geojsons[geom.name];
-        // $scope.geometries.splice(geom, 1);
         $mapFeatures.removeLayer(geom.geom);
     };
-
 
 
     $scope.run = function () {
