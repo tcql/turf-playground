@@ -5,7 +5,12 @@ var turf = require('turf');
 angular.module('turf-playground').controller('MainCtrl', function ($scope, $map, $mapFeatures, timerService) {
     $scope.selected_tab = {name: 'editor'};
     $scope.tools = {};
+    // Format that's easier for the frontend
     $scope.geometries = [];
+    // Our authoritative list of geometries. It's watched,
+    // so if anything is added in any way (editor or draw tools),
+    // it gets updated properly. This allows async within the editor
+    // to modify geometries
     $scope.geojsons = {};
     $scope.geom_id = 0;
     $scope.last_iframe = null;
@@ -14,7 +19,6 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
 
     $scope.$watch("geojsons", function (geojsons, old) {
         if ($scope.watching_geojsons) {
-            console.log("watch triggered")
             $scope.watching_geojsons = false;
             // TODO: Only clear the layers that changed?
             // this could get really slow.
@@ -29,10 +33,7 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
                 }
             });
             $scope.watching_geojsons = true;
-        } else {
-            console.log("watch disabled");
         }
-
     }, true);
 
     // TODO: make this a directive. It shouldn't be in here.
@@ -98,6 +99,16 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
     $map.on('draw:created', function(e) {
         addGeometry(e.layer)
         $scope.$apply();
+    });
+
+    $map.on('draw:edited', function (e) {
+        var layers = e.layers;
+        layers.eachLayer(function (layer) {
+            var geoms = _.where($scope.geometries, {geom: layer});
+            _.each(geoms, function (elem) {
+                $scope.geojsons[elem.name] = layer.toGeoJSON();
+            });
+        });
     });
 
     $map.on('draw:deleted', function (e) {
