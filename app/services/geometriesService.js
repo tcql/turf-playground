@@ -30,7 +30,9 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                 }
             });
             $scope.watching_geojsons = true;
-            $map.fitBounds($mapFeatures)
+            if ($scope.geometries.length > 0) {
+                $map.fitBounds($mapFeatures, {maxZoom:13});
+            }
         }
     }, true);
 
