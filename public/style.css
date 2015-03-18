@@ -24,6 +24,10 @@
 #geometries, #help, #examples {
     padding: 10px;
 }
+
+#examples .pure-form {
+    margin-bottom:8px;
+}
 #editor {
     width:100%;
     height:100%;

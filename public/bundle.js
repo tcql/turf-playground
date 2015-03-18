@@ -8,6 +8,7 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $http
     })
     $scope.selected_tab = {name: 'editor'};
     $scope.tools = {};
+    $scope.example_search = {name: ""};
     // GeometriesService is where *most* of the heavy stuff happens
     $scope.geometries = geometriesService
     $scope.last_iframe = null;
