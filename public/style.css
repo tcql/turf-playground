@@ -85,3 +85,24 @@
 .tab.selected {
     background-color:#444;
 }
+
+blockquote {
+    border-left: 4px solid #ccc;
+    margin-left: 4px;
+    padding:10px;
+    color:#444;
+}
+.help-block {
+    border-width: 2px 0px 0px 0px;
+    border-style: solid;
+    border-color: #ccc;
+    padding-bottom: 22px;
+}
+
+.help-block :last-child {
+    margin-bottom:0px;
+}
+.help-block h4 {
+    margin-top:22px;
+    margin-bottom:18px;
+}
