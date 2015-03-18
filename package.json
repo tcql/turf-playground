@@ -13,7 +13,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "browserify app/main.js -o public/bundle.js"
+    "build": "browserify app/main.js -o public/bundle.js && node makeExamples.js"
   },
   "author": "",
   "license": "ISC"
