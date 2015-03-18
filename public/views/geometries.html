@@ -7,9 +7,12 @@
 
 <form class='pure-form'>
     <table class='pure-table pure-table-horizontal'>
-        <tr ng-repeat='(name, geom) in geometries'>
+        <tr ng-repeat='geom in geometries'>
             <td>
-                g.<input type='text' ng-model='name' spellcheck='false' />
+                g.<input type='text' ng-model='geom.new_name' spellcheck='false' />
+            </td>
+            <td>
+                <a ng-click='updateGeometryName(geom)' class='pure-button' href='#'>Update</a>
             </td>
             <td>
                 <a ng-click='deleteGeometry(geom)' class="pure-button" href="#">Delete</a>

@@ -5,7 +5,7 @@ var turf = require('turf');
 angular.module('turf-playground').controller('MainCtrl', function ($scope, $map, $mapFeatures, timerService) {
     $scope.selected_tab = {name: 'editor'};
     $scope.tools = {};
-    $scope.geometries = {};
+    $scope.geometries = [];
     $scope.geojsons = {};
     $scope.geom_id = 0;
     $scope.last_iframe = null;
@@ -14,21 +14,27 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
 
     $scope.$watch("geojsons", function (geojsons, old) {
         if ($scope.watching_geojsons) {
+            console.log("watch triggered")
             $scope.watching_geojsons = false;
             // TODO: Only clear the layers that changed?
+            // this could get really slow.
             $mapFeatures.clearLayers();
+            $scope.geometries = [];
             _.each(geojsons, function (val, key) {
                 try {
-                    var geom = addGeoJson(val, key);
+                    var geom = addToMap(val, key);
+                    $scope.geometries.push({name: key, new_name:key, geojson: val, geom: geom});
                 } catch (e) {
                     // TODO: error console / popup
                     console.log(e)
                 }
             });
             $scope.watching_geojsons = true;
+        } else {
+            console.log("watch disabled");
         }
 
-    }, true)
+    }, true);
 
     // TODO: make this a directive. It shouldn't be in here.
     $scope.$on('$includeContentLoaded', function () {
@@ -37,14 +43,7 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
 
     // Builds dictionary of geojson geometries, which will be
     // accessible in the editor environment
-
-    var clearAllIntervals = function() {
-        $scope.context.intervals.forEach(function(elem) {
-            $interval.cancel(elem);
-        });
-    }
-
-    var addToGeometries = function(layer, name) {
+    var addGeometry = function(layer, name) {
         if (!name) {
             $scope.geom_id++;
             name = "feature"+$scope.geom_id
@@ -55,7 +54,7 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
         // $scope.geometries.push({name:name, geom: layer})
     };
 
-    var addGeoJson = function (json, name) {
+    var addToMap = function (json, name) {
         var geom = L.geoJson(json, {
             onEachFeature: function (feature, layer) {
 
@@ -83,9 +82,9 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
         var idx = 0;
         geom.eachLayer(function(elem) {
             if(idx == 0) {
-                addToGeometries(elem, name);
+                addGeometry(elem, name);
             } else {
-                addToGeometries(elem);
+                addGeometry(elem);
             }
             $mapFeatures.addLayer(elem);
             idx++;
@@ -94,7 +93,7 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
 
     // When a shape is created using L.Draw, add it to our internal geometries list
     $map.on('draw:created', function(e) {
-        addToGeometries(e.layer)
+        addGeometry(e.layer)
         $scope.$apply();
     });
 
@@ -107,10 +106,21 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
     });
 
 
+    $scope.updateGeometryName = function (geom) {
+        console.log("UPDATING!")
+        $scope.watching_geojsons = false;
+        delete $scope.geojsons[geom.name];
+        $scope.watching_geojsons = true;
+        $scope.geojsons[geom.new_name] = geom.geojson;
+    };
+
     $scope.deleteGeometry = function(geom) {
-        $scope.geometries.splice(geom, 1);
+        delete $scope.geojsons[geom.name];
+        // $scope.geometries.splice(geom, 1);
         $mapFeatures.removeLayer(geom.geom);
     };
+
+
 
     $scope.run = function () {
         var code = $scope.tools.editor.getValue();
