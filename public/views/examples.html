@@ -1,0 +1,18 @@
+<h2>Examples</h2>
+
+<p>
+    Here you can load turf examples. This will clear any existing geometries and editor code.
+</p>
+<p>
+    Don't forget to add result geometry to the <strong>g</strong> object if you want to see the
+    example's results on the map.
+</p>
+
+<table class='pure-table pure-table-horizontal'>
+    <tr ng-repeat='example in examples'>
+        <td>{{example.name}}</td>
+        <td>
+            <div ng-click='loadExample(example)' class='pure-button' href='#'>Load</div>
+        </td>
+    </tr>
+</table>

@@ -5,6 +5,7 @@
   "main": "main.js",
   "dependencies": {
     "angular": "^1.3.14",
+    "dox": "^0.6.1",
     "lodash": "^3.5.0",
     "turf": "^2.0.0",
     "vm-browserify": "tchannel/vm-browserify#master"

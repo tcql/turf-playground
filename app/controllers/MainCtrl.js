@@ -1,7 +1,10 @@
 var vm = require('vm-browserify');
 var turf = require('turf');
 
-angular.module('turf-playground').controller('MainCtrl', function ($scope, $map, $mapFeatures, timerService, geometriesService) {
+angular.module('turf-playground').controller('MainCtrl', function ($scope, $http, $map, $mapFeatures, timerService, geometriesService) {
+    $http.get('public/examples.json').then(function(response) {
+        $scope.examples = response.data
+    })
     $scope.selected_tab = {name: 'editor'};
     $scope.tools = {};
     // GeometriesService is where *most* of the heavy stuff happens
@@ -12,6 +15,12 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
     $scope.$on('$includeContentLoaded', function () {
         prettyPrint();
     })
+
+    $scope.loadExample = function (example) {
+        $scope.geometries.emptyDraw();
+        $scope.tools.editor.setValue(example.example, 1);
+        $scope.selected_tab.name = 'editor';
+    };
 
     // Run the editor code in our restricted context
     $scope.run = function () {

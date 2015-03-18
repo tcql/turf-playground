@@ -21,7 +21,7 @@
     left: 0;
     overflow:auto;
 }
-#geometries, #help {
+#geometries, #help, #examples {
     padding: 10px;
 }
 #editor {

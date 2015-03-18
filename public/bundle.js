@@ -2,10 +2,13 @@
 var vm = require('vm-browserify');
 var turf = require('turf');
 
-// TODO: move a bunch of the geometry manipulation into a service to clean this up
-angular.module('turf-playground').controller('MainCtrl', function ($scope, $map, $mapFeatures, timerService, geometriesService) {
+angular.module('turf-playground').controller('MainCtrl', function ($scope, $http, $map, $mapFeatures, timerService, geometriesService) {
+    $http.get('public/examples.json').then(function(response) {
+        $scope.examples = response.data
+    })
     $scope.selected_tab = {name: 'editor'};
     $scope.tools = {};
+    // GeometriesService is where *most* of the heavy stuff happens
     $scope.geometries = geometriesService
     $scope.last_iframe = null;
 
@@ -14,6 +17,13 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
         prettyPrint();
     })
 
+    $scope.loadExample = function (example) {
+        $scope.geometries.emptyDraw();
+        $scope.tools.editor.setValue(example.example, 1);
+        $scope.selected_tab.name = 'editor';
+    };
+
+    // Run the editor code in our restricted context
     $scope.run = function () {
         var code = $scope.tools.editor.getValue();
         timerService.clearIntervals();
@@ -30,6 +40,9 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
             L: L,
             g: $scope.geometries.getGeojsons(),
             _: _,
+            // Angular-aware setTimeout and setInterval,
+            // with the added bonus of letting us globally cancel
+            // on re-run
             setTimeout: timerService.timeout,
             setInterval: timerService.interval
         }, false);
@@ -139,6 +152,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                 }
             });
             $scope.watching_geojsons = true;
+            $map.fitBounds($mapFeatures)
         }
     }, true);
 

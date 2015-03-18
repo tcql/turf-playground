@@ -30,6 +30,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                 }
             });
             $scope.watching_geojsons = true;
+            $map.fitBounds($mapFeatures)
         }
     }, true);
 

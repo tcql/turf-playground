@@ -27,6 +27,11 @@
                     ng-include="'public/views/help.html'"
                 >
                 </div>
+
+                <div id="examples"
+                    ng-show='selected_tab.name == "examples"'
+                    ng-include="'public/views/examples.html'">
+                </div>
             </div>
 
             <div id="control">
@@ -39,6 +44,9 @@
                     </div>
                     <div data-name='help' class='tab'>
                         <i class="fa fa-question-circle"></i> Help
+                    </div>
+                    <div data-name='examples' class='tab'>
+                        <i class="fa fa-book"></i> Examples
                     </div>
                 </div>
                 <div id="buttons">
