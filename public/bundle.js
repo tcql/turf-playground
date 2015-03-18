@@ -98,7 +98,7 @@ angular.module('turf-playground', []).config(function ($provide) {
     L.mapbox.accessToken = 'pk.eyJ1IjoidGNxbCIsImEiOiJaSlZ6X3JZIn0.mPwXgf3BvAR4dPuBB3ypfA'
     var map = L.mapbox.map('map', 'tcql.lffb55nc');
     var mapFeatures = L.featureGroup().addTo(map);
-
+    window.ft = mapFeatures;
     var drawControl = new L.Control.Draw({
         edit: {
             featureGroup: mapFeatures
@@ -193,10 +193,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                 layer.bindPopup(table);
             },
             style: function(feature) {
-                if (feature.properties.style) {
-                    return feature.properties.style
-                }
-                return {};
+                return feature.properties;
             }
         });
 
@@ -204,7 +201,6 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
             geom.eachLayer(function(elem) {
                 addGeometry(elem, name);
                 $mapFeatures.addLayer(elem);
-                idx++;
             });
         } else {
             addGeometry(geom, name)

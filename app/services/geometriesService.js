@@ -71,10 +71,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                 layer.bindPopup(table);
             },
             style: function(feature) {
-                if (feature.properties.style) {
-                    return feature.properties.style
-                }
-                return {};
+                return feature.properties;
             }
         });
 
@@ -82,7 +79,6 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
             geom.eachLayer(function(elem) {
                 addGeometry(elem, name);
                 $mapFeatures.addLayer(elem);
-                idx++;
             });
         } else {
             addGeometry(geom, name)
