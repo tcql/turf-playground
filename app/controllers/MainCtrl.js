@@ -1,141 +1,19 @@
 var vm = require('vm-browserify');
 var turf = require('turf');
 
-angular.module('turf-playground').controller('MainCtrl', function ($scope, $map, $mapFeatures, timerService) {
+angular.module('turf-playground').controller('MainCtrl', function ($scope, $map, $mapFeatures, timerService, geometriesService) {
     $scope.selected_tab = {name: 'editor'};
     $scope.tools = {};
-    // Format that's easier for the frontend
-    $scope.geometries = [];
-    // Our authoritative list of geometries. It's watched,
-    // so if anything is added in any way (editor or draw tools),
-    // it gets updated properly. This allows async within the editor
-    // to modify geometries
-    $scope.geojsons = {};
-    $scope.geom_id = 0;
+    // GeometriesService is where *most* of the heavy stuff happens
+    $scope.geometries = geometriesService
     $scope.last_iframe = null;
-
-    $scope.watching_geojsons = true;
-
-    $scope.$watch("geojsons", function (geojsons, old) {
-        if ($scope.watching_geojsons) {
-            $scope.watching_geojsons = false;
-            // TODO: Only clear the layers that changed?
-            // this could get really slow.
-            $mapFeatures.clearLayers();
-            $scope.geometries = [];
-            _.each(geojsons, function (val, key) {
-                try {
-                    var geom = addToMap(val, key);
-                } catch (e) {
-                    // TODO: error console / popup
-                    console.log(e)
-                }
-            });
-            $scope.watching_geojsons = true;
-        }
-    }, true);
 
     // TODO: make this a directive. It shouldn't be in here.
     $scope.$on('$includeContentLoaded', function () {
         prettyPrint();
     })
 
-    // Builds dictionary of geojson geometries, which will be
-    // accessible in the editor environment
-    var addGeometry = function(layer, name) {
-        if (!name) {
-            $scope.geom_id++;
-            name = "feature"+$scope.geom_id
-        }
-        var geojson = layer.toGeoJSON();
-        $scope.geojsons[name] = geojson;
-        $scope.geometries.push({
-            name: name,
-            new_name: name,
-            geojson: geojson,
-            geom: layer
-        });
-    };
-
-    var addToMap = function (json, name) {
-        var geom = L.geoJson(json, {
-            onEachFeature: function (feature, layer) {
-
-                table = "<h4>Properties</h4>"
-                    + "<table class='pure-table'>"
-                    + "<thead><tr><th>Key</th><th>Value</th></tr></thead>"
-                    + "<tbody";
-                _.each(feature.properties, function (val, key) {
-                    if (key.name != "style") {
-                        table += "<tr><td>"+key+"</td><td>"+val+"</td></tr>";
-                    }
-                });
-                table += "</tbody>"
-                    +"</table>";
-                layer.bindPopup(table);
-            },
-            style: function(feature) {
-                if (feature.properties.style) {
-                    return feature.properties.style
-                }
-                return {};
-            }
-        });
-
-        var idx = 0;
-        geom.eachLayer(function(elem) {
-            if(idx == 0) {
-                addGeometry(elem, name);
-            } else {
-                addGeometry(elem);
-            }
-            $mapFeatures.addLayer(elem);
-            idx++;
-        });
-    };
-
-    // When a shape is created using L.Draw, add it to our internal geometries list
-    $map.on('draw:created', function(e) {
-        addGeometry(e.layer)
-        $scope.$apply();
-    });
-
-    $map.on('draw:edited', function (e) {
-        var layers = e.layers;
-        layers.eachLayer(function (layer) {
-            var geoms = _.where($scope.geometries, {geom: layer});
-            _.each(geoms, function (elem) {
-                $scope.geojsons[elem.name] = layer.toGeoJSON();
-            });
-        });
-    });
-
-    $map.on('draw:deleted', function (e) {
-        var layers = e.layers;
-        layers.eachLayer(function (layer) {
-            var geoms = _.where($scope.geometries, {geom: layer})
-
-            _.each(geoms, function (elem) {
-                $scope.deleteGeometry(elem);
-            });
-        });
-        $scope.$apply();
-    });
-
-
-    $scope.updateGeometryName = function (geom) {
-        $scope.watching_geojsons = false;
-        delete $scope.geojsons[geom.name];
-        $scope.watching_geojsons = true;
-        $scope.geojsons[geom.new_name] = geom.geojson;
-    };
-
-    $scope.deleteGeometry = function(geom) {
-        delete $scope.geojsons[geom.name];
-        $mapFeatures.removeLayer(geom.geom);
-    };
-
-
+    // Run the editor code in our restricted context
     $scope.run = function () {
         var code = $scope.tools.editor.getValue();
         timerService.clearIntervals();
@@ -150,15 +28,14 @@ angular.module('turf-playground').controller('MainCtrl', function ($scope, $map,
             mapFeatures: $mapFeatures,
             turf: turf,
             L: L,
-            g: $scope.geojsons,
+            g: $scope.geometries.getGeojsons(),
             _: _,
+            // Angular-aware setTimeout and setInterval,
+            // with the added bonus of letting us globally cancel
+            // on re-run
             setTimeout: timerService.timeout,
             setInterval: timerService.interval
         }, false);
     };
 
-    $scope.emptyDraw = function () {
-        $mapFeatures.clearLayers();
-        $scope.geometries = [];
-    };
 });

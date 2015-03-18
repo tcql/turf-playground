@@ -7,15 +7,15 @@
 
 <form class='pure-form'>
     <table class='pure-table pure-table-horizontal'>
-        <tr ng-repeat='geom in geometries'>
+        <tr ng-repeat='geom in geometries.getGeometries()'>
             <td>
                 g.<input type='text' ng-model='geom.new_name' spellcheck='false' />
             </td>
             <td>
-                <a ng-click='updateGeometryName(geom)' class='pure-button' href='#'>Update</a>
+                <a ng-click='geometries.updateGeometryName(geom)' class='pure-button' href='#'>Update</a>
             </td>
             <td>
-                <a ng-click='deleteGeometry(geom)' class="pure-button" href="#">Delete</a>
+                <a ng-click='geometries.deleteGeometry(geom)' class="pure-button" href="#">Delete</a>
             </td>
         </tr>
     </table>

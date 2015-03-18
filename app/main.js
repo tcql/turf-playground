@@ -24,4 +24,5 @@ angular.module('turf-playground', []).config(function ($provide) {
 require('./directives/playgroundAce');
 require('./directives/playgroundTabs');
 require('./services/timerService');
+require('./services/geometriesService');
 require('./controllers/MainCtrl');
