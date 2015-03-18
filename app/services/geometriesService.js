@@ -30,8 +30,8 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                 }
             });
             $scope.watching_geojsons = true;
-            if ($scope.geometries.length > 0) {
-                $map.fitBounds($mapFeatures, {maxZoom:13});
+            if (!$map.getBounds().contains($mapFeatures.getBounds())) {
+                $map.fitBounds($mapFeatures);
             }
         }
     }, true);
@@ -62,16 +62,22 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                     + "<thead><tr><th>Key</th><th>Value</th></tr></thead>"
                     + "<tbody";
                 _.each(feature.properties, function (val, key) {
-                    if (key.name != "style") {
-                        table += "<tr><td>"+key+"</td><td>"+val+"</td></tr>";
-                    }
+                    table += "<tr><td>"+key+"</td><td>"+val+"</td></tr>";
                 });
                 table += "</tbody>"
                     +"</table>";
                 layer.bindPopup(table);
             },
             style: function(feature) {
-                return feature.properties;
+                var def = {
+                    color:'#444',
+                    fillColor: '#0078e7',
+                    weight:2,
+                    opacity:0.7,
+                    fillOpacity: 0.4
+                };
+                return _.extend(def, feature.properties);
+                // return feature.properties;
             }
         });
 
