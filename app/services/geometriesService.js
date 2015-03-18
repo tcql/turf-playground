@@ -78,16 +78,16 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
             }
         });
 
-        var idx = 0;
-        geom.eachLayer(function(elem) {
-            if(idx == 0) {
+        if (geom.getLayers().length == 1) {
+            geom.eachLayer(function(elem) {
                 addGeometry(elem, name);
-            } else {
-                addGeometry(elem);
-            }
-            $mapFeatures.addLayer(elem);
-            idx++;
-        });
+                $mapFeatures.addLayer(elem);
+                idx++;
+            });
+        } else {
+            addGeometry(geom, name)
+            $mapFeatures.addLayer(geom)
+        }
     };
 
     // When a shape is created using L.Draw, add it to our internal geometries list
