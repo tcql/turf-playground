@@ -12,6 +12,7 @@ turf-playground is built as a simple [AngularJS](http://angularjs.org) app. It u
 
 - [Dox](https://github.com/tj/dox) for parsing comments in the turf code to generate the example code library
 - [vm-browserify](https://github.com/tchannel/vm-browserify) for running editor code in an isolated context
+- [ACE editor](http://ace.c9.io/) - the in-browser code editor
 
 #### Hey you're not supposed to commit the node_modules folder!
 
