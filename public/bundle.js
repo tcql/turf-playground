@@ -153,8 +153,10 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                 }
             });
             $scope.watching_geojsons = true;
-            if (!$map.getBounds().contains($mapFeatures.getBounds())) {
-                $map.fitBounds($mapFeatures);
+            if ($mapFeatures.getLayers().length > 0) {
+                if (!$map.getBounds().contains($mapFeatures.getBounds())) {
+                    $map.fitBounds($mapFeatures);
+                }
             }
         }
     }, true);
