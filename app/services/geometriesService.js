@@ -23,7 +23,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
             $scope.geometries = [];
             _.each(geojsons, function (val, key) {
                 try {
-                    var geom = addToMap(val, key);
+                    var geom = self.addToMap(val, key);
                 } catch (e) {
                     // TODO: error console / popup
                     console.log(e)
@@ -55,7 +55,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
         });
     };
 
-    var addToMap = function (json, name) {
+    this.addToMap = function (json, name) {
         var geom = L.geoJson(json, {
             onEachFeature: function (feature, layer) {
 

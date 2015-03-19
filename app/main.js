@@ -1,8 +1,10 @@
-angular = require('angular')
+angular = require('angular');
+require('angular-animate');
+require('./vendor/angular-growl-notifications');
 window._ = require('lodash');
 
 
-angular.module('turf-playground', []).config(function ($provide) {
+angular.module('turf-playground', ['ngAnimate', 'growlNotifications']).config(function ($provide) {
     L.mapbox.accessToken = 'pk.eyJ1IjoidGNxbCIsImEiOiJaSlZ6X3JZIn0.mPwXgf3BvAR4dPuBB3ypfA'
     var map = L.mapbox.map('map', 'tcql.lffb55nc');
     var mapFeatures = L.featureGroup().addTo(map);
@@ -25,4 +27,6 @@ require('./directives/playgroundAce');
 require('./directives/playgroundTabs');
 require('./services/timerService');
 require('./services/geometriesService');
+require('./services/sessionService');
+require('./services/notificationService');
 require('./controllers/MainCtrl');
