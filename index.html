@@ -7,12 +7,15 @@
         <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.css' rel='stylesheet' />
         <link href='http://google-code-prettify.googlecode.com/svn/trunk/styles/sunburst.css' rel='stylesheet' />
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="public/vendor/bootstrap.css" />
+        <link rel="stylesheet" href="public/vendor/angular-growl.css" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js">
         </script>
     </head>
     <body ng-app='turf-playground'>
 
         <div id="pane" ng-controller='MainCtrl'>
+        <div growl></div>
             <div id="pane-content">
                 <div ng-show='selected_tab.name == "editor"' id="editor" playground-ace="tools"></div>
 

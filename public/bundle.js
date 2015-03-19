@@ -2,6 +2,7 @@
 var vm = require('vm-browserify');
 var turf = require('turf');
 
+// TODO: split up controllers, this is getting stupid.
 angular.module('turf-playground').controller('MainCtrl', function (
     $scope,
     $location,
@@ -23,26 +24,36 @@ angular.module('turf-playground').controller('MainCtrl', function (
     // GeometriesService is where *most* of the heavy stuff happens
     $scope.geometries = geometriesService
     $scope.last_iframe = null;
+    $scope.session_id = null;
 
     // TODO: make this a directive. It shouldn't be in here.
     $scope.$on('$includeContentLoaded', function () {
         prettyPrint();
     })
 
-    // If there's a location, we're loading an existing
-    // session, so we have to contact the server
-    if ($location.path().length > 1) {
-        // TODO: block everything while we load
-        sessionService.load($location.path().slice(1)).then(function (result) {
-            $scope.geometries.emptyDraw();
-            $scope.tools.editor.setValue(result.text);
-            _.each(result.geometry, function(val, key) {
-                $scope.geometries.addToMap(val, name)
-            });
-            $scope.geometries.geojsons = result.geometry;
-            $scope.selected_tab.name = 'editor';
+    $scope.newSession = function () {
+        $scope.geometries.emptyDraw();
+
+        // Get a new session ID. Even if we're loading an existing session.
+        // This makes it so we can't overwrite other people's session. If
+        // we loaded a session, our ID would still be different, and then when
+        // we save we'll essentially copy the other session to our new one.
+        sessionService.new().then(function (result) {
+            $scope.session_id = result.id
+            $location.path('/'+$scope.session_id)
         });
     }
+
+    // TODO: block everything while we load
+    sessionService.load($location.path().slice(1)).then(function (result) {
+        $scope.geometries.emptyDraw();
+        $scope.tools.editor.setValue(result.text);
+        _.each(result.geometry, function(val, key) {
+            $scope.geometries.addToMap(val, name)
+        });
+        $scope.geometries.geojsons = result.geometry;
+        $scope.selected_tab.name = 'editor';
+    });
 
     /**
      * Loads one of the turf examples into the editor
@@ -61,12 +72,20 @@ angular.module('turf-playground').controller('MainCtrl', function (
      * @return {[type]} [description]
      */
     $scope.save = function () {
+        notificationService.notify('info', 'Saving...')
         sessionService.save(
+            $scope.session_id,
             $scope.tools.editor.getValue(),
             geometriesService.getGeojsons()
         ).then(function(res) {
             if (res.status == 'error') {
-                notificationService.notify(res.data)
+                notificationService.notify('error', res.data)
+            } else {
+                console.log("Setting session id to")
+                console.log($scope.session_id);
+                $scope.session_id = res.data.id
+                $location.path('/'+$scope.session_id)
+                notificationService.notify('success', 'Saved!')
             }
         });
     };
@@ -141,11 +160,11 @@ angular.module('turf-playground').directive('playgroundTabs', function () {
 },{}],4:[function(require,module,exports){
 angular = require('angular');
 require('angular-animate');
-require('./vendor/angular-growl-notifications');
+require('./vendor/angular-growl');
 window._ = require('lodash');
 
 
-angular.module('turf-playground', ['ngAnimate', 'growlNotifications']).config(function ($provide) {
+angular.module('turf-playground', ['ngAnimate', 'angular-growl']).config(function ($provide) {
     L.mapbox.accessToken = 'pk.eyJ1IjoidGNxbCIsImEiOiJaSlZ6X3JZIn0.mPwXgf3BvAR4dPuBB3ypfA'
     var map = L.mapbox.map('map', 'tcql.lffb55nc');
     var mapFeatures = L.featureGroup().addTo(map);
@@ -172,7 +191,7 @@ require('./services/sessionService');
 require('./services/notificationService');
 require('./controllers/MainCtrl');
 
-},{"./controllers/MainCtrl":1,"./directives/playgroundAce":2,"./directives/playgroundTabs":3,"./services/geometriesService":5,"./services/notificationService":6,"./services/sessionService":7,"./services/timerService":8,"./vendor/angular-growl-notifications":9,"angular":13,"angular-animate":11,"lodash":14}],5:[function(require,module,exports){
+},{"./controllers/MainCtrl":1,"./directives/playgroundAce":2,"./directives/playgroundTabs":3,"./services/geometriesService":5,"./services/notificationService":6,"./services/sessionService":7,"./services/timerService":8,"./vendor/angular-growl":9,"angular":13,"angular-animate":11,"lodash":14}],5:[function(require,module,exports){
 angular.module('turf-playground').service('geometriesService', function ($rootScope, $map, $mapFeatures) {
     var self = this;
 
@@ -321,33 +340,45 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
 });
 
 },{}],6:[function(require,module,exports){
-angular.module('turf-playground').service('notificationService', function () {
+angular.module('turf-playground').service('notificationService', function (growl) {
     var self = this;
     var index = 0;
 
     this.messages = {};
-    this.notify = function (msg) {
-        index++;
-        self.messages[index] = msg;
+    this.notify = function (status, msg, ttl) {
+        ttl = ttl || 2000;
+
+        growl[status](msg, {
+            disableIcons: true,
+            disableCloseButton: true,
+            disableCountDown: true,
+            ttl: ttl
+        });
     };
 });
 
 },{}],7:[function(require,module,exports){
 angular.module('turf-playground').service('sessionService', function ($http) {
     var self = this;
+    var url = 'http://localhost:7877';
 
-    this.save = function(text, geojsons) {
+    this.new = function () {
+        return $http.get(url+'/new').then(function (response) {
+            return response.data;
+        });
+    };
+
+    this.save = function(id, text, geojsons) {
         // todo: handle if no text in editor
-        return $http.post('http://localhost:7877/save', {text: text, geometry: geojsons}).then(function(response) {
-            // todo: handle errors;
-            return {status: 'succes', data: response.data}
+        return $http.post(url+'/save', {id: id, text: text, geometry: geojsons}).then(function(response) {
+            return {status: 'success', data: response.data}
         }, function (response) {
-            // todo: more robust
+            // todo: make error handling more robust
             return {status: 'error', data: response.data.error.text}
         });
     }
     this.load = function(id) {
-        return $http.get('http://localhost:7877/load/'+id).then(function(response) {
+        return $http.get(url+'/load/'+id).then(function(response) {
             console.log(response);
             return response.data
         });
@@ -385,230 +416,403 @@ angular.module('turf-playground').service('timerService', function ($timeout, $i
 });
 
 },{}],9:[function(require,module,exports){
-(function(){
-
-    // Config
-    angular.module('growlNotifications.config', [])
-        .value('growlNotifications.config', {
-            debug: true
-        });
-
-    // Modules
-    angular.module('growlNotifications.directives', []);
-    angular.module('growlNotifications.filters', []);
-    angular.module('growlNotifications.services', []);
-    angular.module('growlNotifications',
-        [
-            'growlNotifications.config',
-            'growlNotifications.directives',
-            'growlNotifications.filters',
-            'growlNotifications.services'
-        ]);
-
-})();(function () {
-
-  function growlNotificationDirective(growlNotifications, $animate, $timeout){
-
-    var defaults = {
-      ttl: growlNotifications.options.ttl || 5000
-    };
-
+/**
+ * angular-growl-v2 - v0.7.3 - 2015-01-26
+ * http://janstevens.github.io/angular-growl-2
+ * Copyright (c) 2015 Marco Rinck,Jan Stevens; Licensed MIT
+ */
+angular.module('angular-growl', []);
+angular.module('angular-growl').directive('growl', [function () {
+    'use strict';
     return {
-
-      /**
-       * Allow compilation via attributes as well so custom
-       * markup can be used
-       */
-      restrict: 'AE',
-
-      /**
-       * Create new child scope
-       */
-      scope: true,
-
-      /**
-       * Controller
-       */
-      controller: growlNotificationController,
-
-      /**
-       * Make the controller available in the directive scope
-       */
-      controllerAs: '$growlNotification',
-
-      /**
-       * Post link function
-       *
-       * @param scope
-       * @param iElem
-       * @param iAttrs
-       * @param ctrl
-       */
-      link: function (scope, iElem, iAttrs, ctrl) {
-
-        // Assemble options
-        var options = angular.extend({}, defaults, scope.$eval(iAttrs.growlNotificationOptions));
-
-        if (iAttrs.ttl) {
-          options.ttl = scope.$eval(iAttrs.ttl);
+      restrict: 'A',
+      templateUrl: 'templates/growl/growl.html',
+      replace: false,
+      scope: {
+        reference: '@',
+        inline: '=',
+        limitMessages: '='
+      },
+      controller: [
+        '$scope',
+        '$timeout',
+        'growl',
+        'growlMessages',
+        function ($scope, $timeout, growl, growlMessages) {
+          $scope.referenceId = $scope.reference || 0;
+          growlMessages.initDirective($scope.referenceId, $scope.limitMessages);
+          $scope.growlMessages = growlMessages;
+          $scope.inlineMessage = angular.isDefined($scope.inline) ? $scope.inline : growl.inlineMessages();
+          $scope.$watch('limitMessages', function (limitMessages) {
+            var directive = growlMessages.directives[$scope.referenceId];
+            if (!angular.isUndefined(limitMessages) && !angular.isUndefined(directive)) {
+              directive.limitMessages = limitMessages;
+            }
+          });
+          $scope.stopTimeoutClose = function (message) {
+            if (!message.clickToClose) {
+              angular.forEach(message.promises, function (promise) {
+                $timeout.cancel(promise);
+              });
+              if (message.close) {
+                growlMessages.deleteMessage(message);
+              } else {
+                message.close = true;
+              }
+            }
+          };
+          $scope.alertClasses = function (message) {
+            return {
+              'alert-success': message.severity === 'success',
+              'alert-error': message.severity === 'error',
+              'alert-danger': message.severity === 'error',
+              'alert-info': message.severity === 'info',
+              'alert-warning': message.severity === 'warning',
+              'icon': message.disableIcons === false,
+              'alert-dismissable': !message.disableCloseButton
+            };
+          };
+          $scope.showCountDown = function (message) {
+            return !message.disableCountDown && message.ttl > 0;
+          };
+          $scope.wrapperClasses = function () {
+            var classes = {};
+            classes['growl-fixed'] = !$scope.inlineMessage;
+            classes[growl.position()] = true;
+            return classes;
+          };
+          $scope.computeTitle = function (message) {
+            var ret = {
+                'success': 'Success',
+                'error': 'Error',
+                'info': 'Information',
+                'warn': 'Warning'
+              };
+            return ret[message.severity];
+          };
         }
-
-        // Move the element to the right location in the DOM
-        $animate.move(iElem, growlNotifications.element);
-
-        // Schedule automatic removal
-        ctrl.timer = $timeout(function () {
-          $animate.leave(iElem);
-        }, options.ttl);
-
-      }
+      ]
     };
-
+  }]);
+angular.module('angular-growl').run([
+  '$templateCache',
+  function ($templateCache) {
+    'use strict';
+    if ($templateCache.get('templates/growl/growl.html') === undefined) {
+      $templateCache.put('templates/growl/growl.html', '<div class="growl-container" ng-class="wrapperClasses()">' + '<div class="growl-item alert" ng-repeat="message in growlMessages.directives[referenceId].messages" ng-class="alertClasses(message)" ng-click="stopTimeoutClose(message)">' + '<button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="growlMessages.deleteMessage(message)" ng-show="!message.disableCloseButton">&times;</button>' + '<button type="button" class="close" aria-hidden="true" ng-show="showCountDown(message)">{{message.countdown}}</button>' + '<h4 class="growl-title" ng-show="message.title" ng-bind="message.title"></h4>' + '<div class="growl-message" ng-bind-html="message.text"></div>' + '</div>' + '</div>');
+    }
   }
-
-  // Inject dependencies
-  growlNotificationDirective.$inject = ['growlNotifications', '$animate', '$timeout'];
-
-  /**
-   * Directive controller
-   *
-   * @param $scope
-   * @param $element
-   */
-  function growlNotificationController($element, $animate) {
-
-    /**
-     * Placeholder for timer promise
-     */
-    this.timer = null;
-
-    /**
-     * Helper method to close notification manually
-     */
-    this.remove = function () {
-
-      // Remove the element
-      $animate.leave($element);
-
-      // Cancel scheduled automatic removal if there is one
-      if (this.timer && this.timer.cancel) {
-        this.timer.cancel();
+]);
+angular.module('angular-growl').provider('growl', function () {
+  'use strict';
+  var _ttl = {
+      success: null,
+      error: null,
+      warning: null,
+      info: null
+    }, _messagesKey = 'messages', _messageTextKey = 'text', _messageTitleKey = 'title', _messageSeverityKey = 'severity', _onlyUniqueMessages = true, _messageVariableKey = 'variables', _referenceId = 0, _inline = false, _position = 'top-right', _disableCloseButton = false, _disableIcons = false, _reverseOrder = false, _disableCountDown = false, _translateMessages = true;
+  this.globalTimeToLive = function (ttl) {
+    if (typeof ttl === 'object') {
+      for (var k in ttl) {
+        if (ttl.hasOwnProperty(k)) {
+          _ttl[k] = ttl[k];
+        }
+      }
+    } else {
+      for (var severity in _ttl) {
+        if (_ttl.hasOwnProperty(severity)) {
+          _ttl[severity] = ttl;
+        }
+      }
+    }
+  };
+  this.globalTranslateMessages = function (translateMessages) {
+    _translateMessages = translateMessages;
+  };
+  this.globalDisableCloseButton = function (disableCloseButton) {
+    _disableCloseButton = disableCloseButton;
+  };
+  this.globalDisableIcons = function (disableIcons) {
+    _disableIcons = disableIcons;
+  };
+  this.globalReversedOrder = function (reverseOrder) {
+    _reverseOrder = reverseOrder;
+  };
+  this.globalDisableCountDown = function (countDown) {
+    _disableCountDown = countDown;
+  };
+  this.messageVariableKey = function (messageVariableKey) {
+    _messageVariableKey = messageVariableKey;
+  };
+  this.globalInlineMessages = function (inline) {
+    _inline = inline;
+  };
+  this.globalPosition = function (position) {
+    _position = position;
+  };
+  this.messagesKey = function (messagesKey) {
+    _messagesKey = messagesKey;
+  };
+  this.messageTextKey = function (messageTextKey) {
+    _messageTextKey = messageTextKey;
+  };
+  this.messageTitleKey = function (messageTitleKey) {
+    _messageTitleKey = messageTitleKey;
+  };
+  this.messageSeverityKey = function (messageSeverityKey) {
+    _messageSeverityKey = messageSeverityKey;
+  };
+  this.onlyUniqueMessages = function (onlyUniqueMessages) {
+    _onlyUniqueMessages = onlyUniqueMessages;
+  };
+  this.serverMessagesInterceptor = [
+    '$q',
+    'growl',
+    function ($q, growl) {
+      function checkResponse(response) {
+        if (response !== undefined && response.data[_messagesKey] && response.data[_messagesKey].length > 0) {
+          growl.addServerMessages(response.data[_messagesKey]);
+        }
+      }
+      return {
+        'response': function (response) {
+          checkResponse(response);
+          return response;
+        },
+        'responseError': function (rejection) {
+          checkResponse(rejection);
+          return $q.reject(rejection);
+        }
+      };
+    }
+  ];
+  this.$get = [
+    '$rootScope',
+    '$interpolate',
+    '$sce',
+    '$filter',
+    '$timeout',
+    'growlMessages',
+    function ($rootScope, $interpolate, $sce, $filter, $timeout, growlMessages) {
+      var translate;
+      growlMessages.onlyUnique = _onlyUniqueMessages;
+      growlMessages.reverseOrder = _reverseOrder;
+      try {
+        translate = $filter('translate');
+      } catch (e) {
+      }
+      function broadcastMessage(message) {
+        if (translate && message.translateMessage) {
+          message.text = translate(message.text, message.variables);
+        } else {
+          var polation = $interpolate(message.text);
+          message.text = polation(message.variables);
+        }
+        var addedMessage = growlMessages.addMessage(message);
+        $rootScope.$broadcast('growlMessage', message);
+        $timeout(function () {
+        }, 0);
+        return addedMessage;
+      }
+      function sendMessage(text, config, severity) {
+        var _config = config || {}, message;
+        message = {
+          text: text,
+          title: _config.title,
+          severity: severity,
+          ttl: _config.ttl || _ttl[severity],
+          variables: _config.variables || {},
+          disableCloseButton: _config.disableCloseButton === undefined ? _disableCloseButton : _config.disableCloseButton,
+          disableIcons: _config.disableIcons === undefined ? _disableIcons : _config.disableIcons,
+          disableCountDown: _config.disableCountDown === undefined ? _disableCountDown : _config.disableCountDown,
+          position: _config.position || _position,
+          referenceId: _config.referenceId || _referenceId,
+          translateMessage: _config.translateMessage === undefined ? _translateMessages : _config.translateMessage,
+          destroy: function () {
+            growlMessages.deleteMessage(message);
+          },
+          setText: function (newText) {
+            message.text = $sce.trustAsHtml(String(newText));
+          },
+          onclose: _config.onclose,
+          onopen: _config.onopen
+        };
+        return broadcastMessage(message);
+      }
+      function warning(text, config) {
+        return sendMessage(text, config, 'warning');
+      }
+      function error(text, config) {
+        return sendMessage(text, config, 'error');
+      }
+      function info(text, config) {
+        return sendMessage(text, config, 'info');
+      }
+      function success(text, config) {
+        return sendMessage(text, config, 'success');
+      }
+      function general(text, config, severity) {
+        severity = (severity || 'error').toLowerCase();
+        sendMessage(text, config, severity);
+      }
+      function addServerMessages(messages) {
+        if (!messages || !messages.length) {
+          return;
+        }
+        var i, message, severity, length;
+        length = messages.length;
+        for (i = 0; i < length; i++) {
+          message = messages[i];
+          if (message[_messageTextKey]) {
+            severity = (message[_messageSeverityKey] || 'error').toLowerCase();
+            var config = {};
+            config.variables = message[_messageVariableKey] || {};
+            config.title = message[_messageTitleKey];
+            sendMessage(message[_messageTextKey], config, severity);
+          }
+        }
+      }
+      function onlyUnique() {
+        return _onlyUniqueMessages;
+      }
+      function reverseOrder() {
+        return _reverseOrder;
+      }
+      function inlineMessages() {
+        return _inline;
+      }
+      function position() {
+        return _position;
+      }
+      return {
+        warning: warning,
+        error: error,
+        info: info,
+        success: success,
+        general: general,
+        addServerMessages: addServerMessages,
+        onlyUnique: onlyUnique,
+        reverseOrder: reverseOrder,
+        inlineMessages: inlineMessages,
+        position: position
+      };
+    }
+  ];
+});
+angular.module('angular-growl').service('growlMessages', [
+  '$sce',
+  '$timeout',
+  function ($sce, $timeout) {
+    'use strict';
+    this.directives = {};
+    var preloadDirectives = {};
+    function preLoad(referenceId) {
+      var directive;
+      if (preloadDirectives[referenceId]) {
+        directive = preloadDirectives[referenceId];
+      } else {
+        directive = preloadDirectives[referenceId] = { messages: [] };
+      }
+      return directive;
+    }
+    this.initDirective = function (referenceId, limitMessages) {
+      if (preloadDirectives[referenceId]) {
+        this.directives[referenceId] = preloadDirectives[referenceId];
+        this.directives[referenceId].limitMessages = limitMessages;
+      } else {
+        this.directives[referenceId] = {
+          messages: [],
+          limitMessages: limitMessages
+        };
+      }
+      return this.directives[referenceId];
+    };
+    this.getAllMessages = function (referenceId) {
+      referenceId = referenceId || 0;
+      var messages;
+      if (this.directives[referenceId]) {
+        messages = this.directives[referenceId].messages;
+      } else {
+        messages = [];
+      }
+      return messages;
+    };
+    this.destroyAllMessages = function (referenceId) {
+      var messages = this.getAllMessages(referenceId);
+      for (var i = messages.length - 1; i >= 0; i--) {
+        messages[i].destroy();
+      }
+      if (this.directives[referenceId]) {
+        this.directives[referenceId].messages = [];
       }
     };
-
+    this.addMessage = function (message) {
+      var directive, messages, found, msgText;
+      if (this.directives[message.referenceId]) {
+        directive = this.directives[message.referenceId];
+      } else {
+        directive = preLoad(message.referenceId);
+      }
+      messages = directive.messages;
+      if (this.onlyUnique) {
+        angular.forEach(messages, function (msg) {
+          msgText = $sce.getTrustedHtml(msg.text);
+          if (message.text === msgText && message.severity === msg.severity && message.title === msg.title) {
+            found = true;
+          }
+        });
+        if (found) {
+          return;
+        }
+      }
+      message.text = $sce.trustAsHtml(String(message.text));
+      if (message.ttl && message.ttl !== -1) {
+        message.countdown = message.ttl / 1000;
+        message.promises = [];
+        message.close = false;
+        message.countdownFunction = function () {
+          if (message.countdown > 1) {
+            message.countdown--;
+            message.promises.push($timeout(message.countdownFunction, 1000));
+          } else {
+            message.countdown--;
+          }
+        };
+      }
+      if (angular.isDefined(directive.limitMessages)) {
+        var diff = messages.length - (directive.limitMessages - 1);
+        if (diff > 0) {
+          messages.splice(directive.limitMessages - 1, diff);
+        }
+      }
+      if (this.reverseOrder) {
+        messages.unshift(message);
+      } else {
+        messages.push(message);
+      }
+      if (typeof message.onopen === 'function') {
+        message.onopen();
+      }
+      if (message.ttl && message.ttl !== -1) {
+        message.promises.push($timeout(angular.bind(this, function () {
+          this.deleteMessage(message);
+        }), message.ttl));
+        message.promises.push($timeout(message.countdownFunction, 1000));
+      }
+      return message;
+    };
+    this.deleteMessage = function (message) {
+      var messages = this.directives[message.referenceId].messages, index = messages.indexOf(message);
+      if (index > -1) {
+        messages[index].close = true;
+        messages.splice(index, 1);
+      }
+      if (typeof message.onclose === 'function') {
+        message.onclose();
+      }
+    };
   }
-
-  // Inject dependencies
-  growlNotificationController.$inject = ['$element', '$animate'];
-
-  // Export
-  angular
-    .module('growlNotifications.directives')
-    .directive('growlNotification', growlNotificationDirective);
-
-})();(function () {
-
-  /**
-   * Create directive definition object
-   *
-   * @param growlNotifications
-   */
-  function growlNotificationsDirective(growlNotifications) {
-
-    return {
-
-      /**
-       * Allow compilation via attributes as well so custom
-       * markup can be used
-       */
-      restrict: 'AE',
-
-      /**
-       * Post link function
-       *
-       * @param scope
-       * @param iElem
-       * @param iAttrs
-       */
-      link: function (scope, iElem, iAttrs) {
-        growlNotifications.element = iElem;
-      }
-    };
-
-  }
-
-  // Inject dependencies
-  growlNotificationsDirective.$inject = ['growlNotifications'];
-
-  // Export
-  angular
-    .module('growlNotifications.directives')
-    .directive('growlNotifications', growlNotificationsDirective);
-
-})();(function () {
-
-  /**
-   * Growl notifications provider
-   */
-  function growlNotificationsProvider(){
-
-    // Default options
-    var options = {
-      ttl: 5000
-    };
-
-    /**
-     * Provider method to change default options
-     *
-     * @param newOptions
-     */
-    this.setOptions = function (newOptions) {
-      angular.extend(options, newOptions);
-      return this;
-    };
-
-    /**
-     * Provider convenience method to get or set default ttl
-     *
-     * @param ttl
-     * @returns {*}
-     */
-    this.ttl = function (ttl) {
-      if (angular.isDefined(ttl)) {
-        options.ttl = ttl;
-        return this;
-      }
-      return options.ttl;
-    };
-
-    /**
-     * Factory method
-     *
-     * @param $timeout
-     * @param $rootScope
-     * @returns {GrowlNotifications}
-     */
-    this.$get = function () {
-
-      function GrowlNotifications() {
-
-        this.options = options;
-        this.element = null;
-
-      }
-
-      return new GrowlNotifications();
-
-    };
-
-  }
-
-  // Export
-  angular
-    .module('growlNotifications.services')
-    .provider('growlNotifications', growlNotificationsProvider);
-
-})();
+]);
 },{}],10:[function(require,module,exports){
 /**
  * @license AngularJS v1.3.15
