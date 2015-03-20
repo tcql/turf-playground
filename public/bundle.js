@@ -7,7 +7,7 @@ angular.module('turf-playground').controller('ExamplesCtrl',
 
     $scope.geometries = geometriesService;
     $scope.example_search = {name: ""};
-    $http.get('public/examples.json').then(function(response) {
+    $http.get('/examples.json').then(function(response) {
         $scope.examples = response.data
     });
 
