@@ -1,2 +1,3 @@
 npm-debug.log
-nod_modules/*
+access.log
+node_modules/*
