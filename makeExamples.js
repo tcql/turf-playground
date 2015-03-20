@@ -32,4 +32,4 @@ dirs.forEach(function(dir) {
     }
 });
 
-fs.writeFileSync(__dirname+'/public/examples.json', JSON.stringify(examples));
+fs.writeFileSync(__dirname+'/client/public/examples.json', JSON.stringify(examples));
