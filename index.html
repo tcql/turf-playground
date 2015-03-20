@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link href='public/style.css' rel='stylesheet' />
         <link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.css' rel='stylesheet' />
         <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
         <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.css' rel='stylesheet' />
@@ -9,13 +8,14 @@
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="public/vendor/bootstrap.css" />
         <link rel="stylesheet" href="public/vendor/angular-growl.css" />
+        <link href='public/style.css' rel='stylesheet' />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js">
         </script>
     </head>
-    <body ng-app='turf-playground'>
+    <body ng-app='turf-playground' ng-controller='MainCtrl'>
 
-        <div id="pane" ng-controller='MainCtrl'>
-        <div growl></div>
+        <div id="pane">
+            <div growl limit-messages="1"></div>
             <div id="pane-content">
                 <div ng-show='selected_tab.name == "editor"' id="editor" playground-ace="tools"></div>
 
@@ -37,30 +37,34 @@
                 </div>
             </div>
 
-            <div id="control">
-                <div playground-tabs="selected_tab" id="tabs" style='float:left'>
-                    <div data-name='editor' class='tab selected'>
-                        <i class='fa fa-code'></i> Editor
-                    </div>
-                    <div data-name='geometries' class='tab'>
-                        <i class="fa fa-plus-square"></i> Geometries
-                    </div>
-                    <div data-name='help' class='tab'>
-                        <i class="fa fa-question-circle"></i> Help
-                    </div>
-                    <div data-name='examples' class='tab'>
-                        <i class="fa fa-book"></i> Examples
-                    </div>
+
+        </div>
+        <div id="control">
+            <div playground-tabs="selected_tab" id="tabs" style='float:left'>
+                <div data-name='editor' class='tab selected'>
+                    <i class='fa fa-code'></i> Editor
                 </div>
-                <div id="buttons">
-                <a id="clear" ng-click='geometries.emptyDraw()' class="pure-button" href="#">Clear Map</a>
-                <a id="run" ng-click='run()' class="pure-button pure-button-primary" href="#">Run</a>
+                <div data-name='geometries' class='tab'>
+                    <i class="fa fa-plus-square"></i> Geometries
                 </div>
-                <a id="run" ng-click='save()' class="pure-button pure-button-primary" href="#">Save</a>
+                <div data-name='help' class='tab'>
+                    <i class="fa fa-question-circle"></i> Help
+                </div>
+                <div data-name='examples' class='tab'>
+                    <i class="fa fa-book"></i> Examples
                 </div>
             </div>
-        </div>
 
+            <div id='buttons'>
+                <a ng-click='run()' class='pure-button pure-button-primary' href='#'>
+                Run <i class='fa fa-play-circle'></i> </a>
+                <a ng-click='save()' class='pure-button button-success' href='#'>
+                Save <i class='fa fa-file-code-o'></i> </a>
+                <a ng-click='geometries.emptyDraw()' class='pure-button' href='#'>Clear Map <i class='fa fa-remove'></i></a>
+                <a ng-click='new()' class='pure-button' href='#'>
+                New <i class='fa fa-external-link'></i></a>
+            </div>
+        </div>
         <div id="map"></div>
 
 

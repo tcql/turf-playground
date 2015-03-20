@@ -67,6 +67,11 @@ angular.module('turf-playground').controller('MainCtrl', function (
         $scope.selected_tab.name = 'editor';
     };
 
+    $scope.new = function () {
+        var loc = $location.absUrl().split("#");
+        window.open(loc[0]);
+    }
+
     /**
      * Saves the current editor session and generates an id
      * @return {[type]} [description]
@@ -81,8 +86,6 @@ angular.module('turf-playground').controller('MainCtrl', function (
             if (res.status == 'error') {
                 notificationService.notify('error', res.data)
             } else {
-                console.log("Setting session id to")
-                console.log($scope.session_id);
                 $scope.session_id = res.data.id
                 $location.path('/'+$scope.session_id)
                 notificationService.notify('success', 'Saved!')

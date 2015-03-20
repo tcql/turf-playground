@@ -36,7 +36,7 @@
     position:absolute;
     top:0;
     width:50%;
-    bottom:0;
+    bottom:58px;
     right:0;
 }
 #control {
@@ -48,18 +48,16 @@
     height: 50px;
     background-color:#222;
 }
-#run {
-    float:right;
-    margin:10px 0px 10px 0px;
-}
-#clear {
-    float:right;
-    margin:10px 10px 10px 10px;
-}
-#buttons {
-    margin-top:-6px;
+#control #buttons {
     float:right;
 }
+#control .pure-button {
+    margin:8px 2px;
+}
+#control .pure-button:last-child {
+    margin-right:8px;
+}
+
 #tabs {
     float:left;
 }
@@ -105,5 +103,28 @@ blockquote {
 .help-block h4 {
     margin-top:22px;
     margin-bottom:18px;
+}
+
+.button-success,
+.button-error,
+.button-warning,
+.button-secondary {
+    color: white;
+}
+
+.button-success {
+    background: rgb(28, 184, 65); /* this is a green */
+}
+
+.button-error {
+    background: rgb(202, 60, 60); /* this is a maroon */
+}
+
+.button-warning {
+    background: rgb(223, 117, 20); /* this is an orange */
+}
+
+.button-secondary {
+    background: rgb(66, 184, 221); /* this is a light blue */
 }
 
