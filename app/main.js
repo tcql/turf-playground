@@ -22,10 +22,12 @@ angular.module('turf-playground', ['ngAnimate', 'angular-growl']).config(functio
     $provide.value("$mapFeatures", mapFeatures);
 });
 
-require('./directives/playgroundAce');
-require('./directives/playgroundTabs');
+require('./services/editorService');
 require('./services/timerService');
 require('./services/geometriesService');
 require('./services/sessionService');
 require('./services/notificationService');
+require('./directives/playgroundAce');
+require('./directives/playgroundTabs');
 require('./controllers/MainCtrl');
+require('./controllers/ExamplesCtrl');

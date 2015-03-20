@@ -17,24 +17,23 @@
         <div id="pane">
             <div growl limit-messages="1"></div>
             <div id="pane-content">
-                <div ng-show='selected_tab.name == "editor"' id="editor" playground-ace="tools"></div>
+                <div id="editor"
+                    ng-show='selected_tab.name == "editor"'
+                    playground-ace></div>
 
                 <div id="geometries"
                     ng-show='selected_tab.name == "geometries"'
-                    ng-include="'public/views/geometries.html'"
-                >
-                </div>
+                    ng-include="'public/views/geometries.html'"></div>
 
                 <div id="help"
                     ng-show='selected_tab.name == "help"'
-                    ng-include="'public/views/help.html'"
-                >
-                </div>
+                    ng-include="'public/views/help.html'"></div>
 
-                <div id="examples"
+                <div
+                    id="examples"
+                    ng-controller='ExamplesCtrl'
                     ng-show='selected_tab.name == "examples"'
-                    ng-include="'public/views/examples.html'">
-                </div>
+                    ng-include="'public/views/examples.html'"></div>
             </div>
 
 
