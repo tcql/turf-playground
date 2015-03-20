@@ -392,7 +392,12 @@ moment = require('moment');
 
 angular.module('turf-playground').service('sessionService', function ($http) {
     var self = this;
-    var url = 'http://localhost:7877';
+    // TODO: Whenever we get moved off of GH-Pages, a lot of things
+    // will stop needing to be hardcoded in / offloaded, because we'll
+    // presumably be moving to a setup where we can host scripts in the
+    // same place as the playground site itself
+    var url = 'http://104.156.227.114:7877';
+    // var url = 'http://localhost:7877';
 
     this.new = function () {
         return $http.get(url+'/new').then(function (response) {
