@@ -38,8 +38,8 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
         }
     }, true);
 
-    // Builds dictionary of geojson geometries, which will be
-    // accessible in the editor environment
+    // Handles adding a geometry to the geojsons list. Used
+    // when adding geometries from drawn / edited map layers
     var addGeometry = function(layer, name) {
         if (!name) {
             $scope.geom_id++;
@@ -55,6 +55,10 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
         });
     };
 
+
+    // Adds stored geojson back to the map. If the resultant
+    // geometry is a single element wrapped in a FeatureGroup,
+    // only the element itself is added to the geojsons list
     this.addToMap = function (json, name) {
         var geom = L.geoJson(json, {
             onEachFeature: function (feature, layer) {
@@ -91,6 +95,10 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
         } else {
             addGeometry(geom, name)
             $mapFeatures.addLayer(geom)
+        }
+
+        if (!$scope.$$phase) {
+            $scope.$apply();
         }
     };
 
@@ -135,6 +143,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     };
 
     this.emptyDraw = function () {
+        $scope.$emit("geometries:emptied");
         $scope.geojsons = {};
     };
     this.getGeometries = function () {

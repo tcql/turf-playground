@@ -10,12 +10,14 @@
     "dox": "^0.6.1",
     "express": "^4.12.3",
     "express-brute": "^0.5.3",
+    "geojson-validation": "^0.1.5",
     "lodash": "^3.5.0",
     "moment": "^2.9.0",
     "morgan": "^1.5.2",
     "nedb": "^1.1.1",
-    "turf": "^2.0.0",
-    "vm-browserify": "tchannel/vm-browserify#master"
+    "rpl-www": "^0.2.0",
+    "terrarium": "^2.1.1",
+    "turf": "^2.0.0"
   },
   "devDependencies": {},
   "scripts": {
