@@ -11,7 +11,7 @@ turf-playground is a project designed to let you play around and learn [turf](ht
 turf-playground is built as a simple [AngularJS](http://angularjs.org) app. It uses [Browserify](http://browserify.org/) for building the compiled JS actually used by the site. Also:
 
 - [Dox](https://github.com/tj/dox) for parsing comments in the turf code to generate the example code library
-- [vm-browserify](https://github.com/tchannel/vm-browserify) for running editor code in an isolated context
+- [Terrarium](https://github.com/tmcw/terrarium) for running editor code and instrumentation
 - [ACE editor](http://ace.c9.io/) - the in-browser code editor
 
 #### Running
