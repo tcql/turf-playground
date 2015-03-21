@@ -25,6 +25,24 @@ Geometries can be accessed in the <em>Editor</em> environment by using the <stro
 </div>
 
 <div class='help-block'>
+<h4>Adding Geometries in the Editor</h4>
+<p>
+Geometries can be added in the <em>Editor</em> either by using the <strong>g</strong> object or by using <strong>//=</strong> comments:
+</p>
+<pre class='prettyprint'>
+var feature1 = // some geojson
+g.feature1 = feature1;
+</pre>
+
+is the same as
+
+<pre class='prettyprint'>
+var feature1 = // some geojson
+//=feature1
+</pre>
+</div>
+
+<div class='help-block'>
 <h4>Styling Geometries</h4>
 <p/>
 Geometries will be styled using Leaflet's style options. To set styles in the <em>Editor</em>, add leaflet style options to a feature's properties:
@@ -32,6 +50,31 @@ Geometries will be styled using Leaflet's style options. To set styles in the <e
 <pre class='prettyprint'>
 g.feature1.properties.color = "#ff00ff";
 g.feature1.properties.weight = 2;
+</pre>
+</div>
+
+<div class='help-block'>
+<h4>Time Based Functions</h4>
+<p/>
+The <em>Editor</em> knows how to use both <strong>setInterval</strong> and <strong>setTimeout</strong>, so you can do pretty fun things:
+</p>
+<pre class='prettyprint'>
+var pt = turf.point([-85, 45]);
+
+var buff = 1;
+var inc = 1;
+
+map.setZoom(9);
+
+setInterval(function () {
+    var ft = turf.buffer(pt, buff, 'miles');
+
+    buff += inc
+    if (buff > 10) inc = -1;
+    if (buff < 2) inc = 1;
+
+    //=ft
+}, 50);
 </pre>
 </div>
 
