@@ -1,4 +1,3 @@
-var turf = require('turf');
 var vm = require('vm-browserify');
 /**
  * This service supplies access to the ACE editor to all of our
