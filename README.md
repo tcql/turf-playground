@@ -2,7 +2,7 @@
 
 ## What is this?
 
-turf-playground is a project designed to let you play around and learn [turf](http://turfjs.org) in the browser without worrying about setting up the boilerplate code to get started. The playground is hosted with github pages [here](http://tchannel.github.io/turf-playground).
+turf-playground is a project designed to let you play around and learn [turf](http://turfjs.org) in the browser without worrying about setting up the boilerplate code to get started. The playground is hosted at [turfjs.party](http://turfjs.party).
 
 ## Contributing
 
@@ -14,9 +14,9 @@ turf-playground is built as a simple [AngularJS](http://angularjs.org) app. It u
 - [vm-browserify](https://github.com/tchannel/vm-browserify) for running editor code in an isolated context
 - [ACE editor](http://ace.c9.io/) - the in-browser code editor
 
-#### Hey you're not supposed to commit the node_modules folder!
+#### Running
 
-Yep. But I'm hosting this on github pages for now (because I'm lazy and cheap), which only serves static html sites. Meaning I can't have a server-side build step to install node modules
+Run the server using `npm start`
 
 #### Building the project
 
