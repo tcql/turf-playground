@@ -1,12 +1,45 @@
-#body {
+/* TODO: clean up, remove a bunch of unnecessary ids */
+
+body {
     overflow:hidden;
+}
+
+/* Quick documentation button on the editor page */
+#quickdoc {
+    background-color:yellow;
+    z-index:9000;
+    top:0px;
+    right:0px;
+    position:absolute;
+    padding:4px;
+    cursor:pointer;
+    -webkit-border-bottom-left-radius: 4px;
+    -moz-border-radius-bottomleft: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+/* floating documentation pane */
+#documentation {
+    position:absolute;
+    top:0px;
+    right:180px;
+    left: 50%;
+    bottom: 80px;
+    background-color: #444;
+    color: #eee;
+    z-index:1000;
+    /*-webkit-border-top-right-radius: 8px;*/
+    -webkit-border-bottom-right-radius: 8px;
+    /*-moz-border-radius-topright: 8px;*/
+    -moz-border-radius-bottomright: 8px;
+    /*border-top-right-radius: 8px;*/
+    border-bottom-right-radius: 8px;
+    padding:10px 20px;
 }
 
 #pane {
     position: absolute;
     background-color:#eee;
-    /*background-color:#111;
-    color: #eee;*/
     top: 0;
     width:50%;
     bottom: 0px;
@@ -21,17 +54,24 @@
     left: 0;
     overflow:auto;
 }
-#geometries, #help, #examples {
-    padding: 10px;
+
+/**
+ * All the plain text-centric pages (everything other than Editor)
+ * need padding
+ */
+.text-page {
+    padding:10px;
 }
 
 #examples .pure-form {
     margin-bottom:8px;
 }
-#editor {
+
+#editor, #ace {
     width:100%;
     height:100%;
 }
+
 #map {
     position:absolute;
     top:0;
@@ -39,6 +79,10 @@
     bottom:58px;
     right:0;
 }
+
+/*****************
+ * Controls Panel
+ *****************/
 #control {
     border-top:6px solid #444;
     position:absolute;
@@ -48,9 +92,11 @@
     height: 50px;
     background-color:#222;
 }
+
 #control #buttons {
     float:right;
 }
+
 #control .pure-button {
     margin:8px 2px;
 }
@@ -84,6 +130,10 @@
     background-color:#444;
 }
 
+
+/*************
+ * Help Page
+ *************/
 blockquote {
     border-left: 4px solid #ccc;
     margin-left: 4px;
@@ -105,6 +155,9 @@ blockquote {
     margin-bottom:18px;
 }
 
+/**********************
+ * Additional Buttons
+ **********************/
 .button-success,
 .button-error,
 .button-warning,
