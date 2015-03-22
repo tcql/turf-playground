@@ -1,9 +1,14 @@
 var fs = require('fs');
 var dox = require('dox');
-
+var doxme = require('doxme');
+var marked = require('marked');
+var _ = require('lodash');
 var base = __dirname+"/node_modules/turf/node_modules";
 var dirs = fs.readdirSync(base);
-var _ = require('lodash');
+
+marked.setOptions({
+    gfm: true
+});
 
 function getExample(comments) {
     if (comments[0] && comments[0].tags) {
@@ -26,9 +31,12 @@ dirs.forEach(function(dir) {
     var comment = dox.parseComments(contents);
 
     var example = getExample(comment);
-
     if (example) {
-        examples.push({name: dir, example: example});
+        examples.push({
+            name: dir,
+            example: example,
+            desc: marked(doxme(comment))
+        });
     }
 });
 
