@@ -19,7 +19,17 @@
             <div id="pane-content">
                 <div id="editor"
                     ng-show='selected_tab.name == "editor"'>
-                    <div id="quickdoc">Quick Docs <i class='fa fa-bolt'></i></div>
+                    <div
+                        ng-click='toggleDocs()'
+                        id='quickdoc'
+                    >
+                        <span ng-if='documentation.show'>
+                            Hide Docs <i class='fa fa-remove'></i>
+                        </span>
+                        <span ng-if='!documentation.show'>
+                            Quick Docs <i class='fa fa-bolt'></i>
+                        </span>
+                    </div>
                     <div id="ace" playground-ace></div>
                 </div>
 

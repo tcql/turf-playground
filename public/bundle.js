@@ -1,15 +1,10 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-
-// TODO: make "Tools" and such services, so the coupling with
-// the parent controler isn't so flimsy
 angular.module('turf-playground').controller('ExamplesCtrl',
-['$scope', '$http', 'geometriesService', 'editorService', function($scope, $http, geometriesService, editorService) {
+['$scope', '$http', 'geometriesService', 'editorService', 'examplesService', function($scope, $http, geometriesService, editorService, examplesService) {
 
     $scope.geometries = geometriesService;
     $scope.example_search = {name: ""};
-    $http.get('/examples.json').then(function(response) {
-        $scope.examples = response.data
-    });
+    $scope.examples = examplesService
 
     /**
      * Loads one of the turf examples into the editor
@@ -20,8 +15,8 @@ angular.module('turf-playground').controller('ExamplesCtrl',
     $scope.loadExample = function (example) {
         $scope.geometries.emptyDraw();
         editorService.setText(example.example, 1);
-        $scope.documentation.show = true;
-        $scope.documentation.content = example.desc;
+        // $scope.documentation.show = true;
+        // $scope.documentation.content = example.desc;
         $scope.selected_tab.name = 'editor';
     };
 }]);
@@ -35,13 +30,14 @@ angular.module('turf-playground').controller('MainCtrl', function (
     geometriesService,
     sessionService,
     notificationService,
-    editorService
+    editorService,
+    docService
 ) {
     $scope.selected_tab = {name: 'editor'};
     $scope.notifications = notificationService.messages;
     $scope.geometries = geometriesService
     $scope.session_id = null;
-    $scope.documentation = {show: false, content: ''}
+    $scope.documentation = docService
     $scope.last_iframe = null;
 
     // TODO: make this a directive. It shouldn't be in here.
@@ -78,6 +74,17 @@ angular.module('turf-playground').controller('MainCtrl', function (
         window.open(loc[0]);
     };
 
+    $scope.toggleDocs = function () {
+        var show = docService.toggleShow();
+
+        if (show) {
+            var ed = editorService.getEditor();
+            var selected = ed.session.getTextRange(ed.getSelectionRange());
+
+            docService.findDoc(selected);
+        }
+    };
+
     /**
      * Saves the current editor session and generates an id
      * If an ID already exists, we update the existing session.
@@ -110,9 +117,9 @@ angular.module('turf-playground').directive('cleanDocs', function () {
 
                 // Add prettyprint to the example code. Because doxme writes
                 // github-style output, the example code is written as a <code>
-                // inside of a <pre>, so both need the prettyprint
+                // inside of a <pre>, so find that pair, then add prettyprint to
+                // the <pre>
                 var code = elem.find('pre code').parent().addClass('prettyprint');
-                // code.parent().addClass('prettyprint');
                 prettyPrint();
             });
         }
@@ -186,13 +193,56 @@ require('./services/timerService');
 require('./services/geometriesService');
 require('./services/sessionService');
 require('./services/notificationService');
+require('./services/examplesService');
+require('./services/docService');
 require('./directives/playgroundAce');
 require('./directives/playgroundTabs');
 require('./directives/cleanDocs');
 require('./controllers/MainCtrl');
 require('./controllers/ExamplesCtrl');
 
-},{"./controllers/ExamplesCtrl":1,"./controllers/MainCtrl":2,"./directives/cleanDocs":3,"./directives/playgroundAce":4,"./directives/playgroundTabs":5,"./services/editorService":7,"./services/geometriesService":8,"./services/notificationService":9,"./services/sessionService":10,"./services/timerService":11,"./vendor/angular-growl":12,"angular":18,"angular-animate":14,"angular-sanitize":16,"lodash":20}],7:[function(require,module,exports){
+},{"./controllers/ExamplesCtrl":1,"./controllers/MainCtrl":2,"./directives/cleanDocs":3,"./directives/playgroundAce":4,"./directives/playgroundTabs":5,"./services/docService":7,"./services/editorService":8,"./services/examplesService":9,"./services/geometriesService":10,"./services/notificationService":11,"./services/sessionService":12,"./services/timerService":13,"./vendor/angular-growl":14,"angular":20,"angular-animate":16,"angular-sanitize":18,"lodash":22}],7:[function(require,module,exports){
+angular.module('turf-playground').service('docService', function ($rootScope, examplesService) {
+    var self = this;
+    this.show = false;
+    this.content = '';
+
+    var default_content =
+        "<h4>Welcome to turfjs.party Quick Docs</h4>" +
+        "<p>" +
+        "    To use Quick Docs, select a line of text which contains a turf" +
+        "    function in the editor and either click the <strong>Quick Docs</strong>" +
+        "    button or press Ctrl+I" +
+        "</p>";
+
+    this.reset = function () {
+        self.content = default_content;
+    }
+
+    this.toggleShow = function () {
+        self.show = !self.show;
+        return self.show;
+    }
+
+    this.findDoc = function(selected) {
+        var matches = selected.match(/turf\.\w+/);
+        self.reset();
+        if (matches && matches.length > 0) {
+            // Search and display the docs for the searched
+            // turf method (if it exists)
+            var ex = examplesService.findExample(matches[0]);
+            if (ex) {
+                self.content = ex.desc;
+            }
+        }
+        self.show = true;
+        $rootScope.$apply();
+    }
+
+    this.reset();
+});
+
+},{}],8:[function(require,module,exports){
 // var vm = require('vm-browserify');
 var Terrarium = require('terrarium');
 var validator = require('geojson-validation')
@@ -208,7 +258,9 @@ angular.module('turf-playground').service('editorService', [
 '$mapFeatures',
 'geometriesService',
 'timerService',
-function ($rootScope, map, features, geometries, timer) {
+'examplesService',
+'docService',
+function ($rootScope, map, features, geometries, timer, examples, docs) {
     var self = this;
     var editor = null;
     var container = null;
@@ -220,20 +272,10 @@ function ($rootScope, map, features, geometries, timer) {
             bindKey: {win: 'Ctrl-I',  mac: 'Command-I'},
             exec: function() {
                 var selected = editor.session.getTextRange(editor.getSelectionRange());
-                findDocs(selected);
+                docs.findDoc(selected);
             }
         });
     };
-
-    var findDocs = function() {
-        var matches = selected.match(/turf\.\w+/)
-        if (matches.length > 0) {
-            // Search and display the docs for the searched
-            // turf method (if it exists)
-            console.log(matches[0])
-        }
-    }
-
 
     this.getEditor = function() {
         return editor;
@@ -297,7 +339,29 @@ function ($rootScope, map, features, geometries, timer) {
     $rootScope.$on("geometries:emptied", this.stop);
 }]);
 
-},{"geojson-validation":19,"terrarium":43}],8:[function(require,module,exports){
+},{"geojson-validation":21,"terrarium":45}],9:[function(require,module,exports){
+angular.module('turf-playground').service('examplesService', [
+'$http',
+function ($http) {
+    var self = this;
+
+    this.examples = [];
+    $http.get('/examples.json').then(function(response) {
+        self.examples = response.data
+    });
+
+
+    this.findExample = function (name) {
+        name = name.replace(".", "-");
+        var ex = _.where(self.examples, {name: name});
+
+        if (ex.length > 0) {
+            return ex[0];
+        }
+    };
+}]);
+
+},{}],10:[function(require,module,exports){
 angular.module('turf-playground').service('geometriesService', function ($rootScope, $map, $mapFeatures) {
     var self = this;
 
@@ -454,7 +518,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     };
 });
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 angular.module('turf-playground').service('notificationService', function (growl) {
     var self = this;
     var index = 0;
@@ -472,7 +536,7 @@ angular.module('turf-playground').service('notificationService', function (growl
     };
 });
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 moment = require('moment');
 
 angular.module('turf-playground').service('sessionService', function ($http) {
@@ -506,7 +570,7 @@ angular.module('turf-playground').service('sessionService', function ($http) {
     }
 });
 
-},{"moment":21}],11:[function(require,module,exports){
+},{"moment":23}],13:[function(require,module,exports){
 angular.module('turf-playground').service('timerService', function ($timeout, $interval)
 {
     var self = this;
@@ -536,7 +600,7 @@ angular.module('turf-playground').service('timerService', function ($timeout, $i
     }
 });
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /**
  * angular-growl-v2 - v0.7.3 - 2015-01-26
  * http://janstevens.github.io/angular-growl-2
@@ -934,7 +998,7 @@ angular.module('angular-growl').service('growlMessages', [
     };
   }
 ]);
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
@@ -3073,11 +3137,11 @@ angular.module('ngAnimate', ['ng'])
 
 })(window, window.angular);
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 require('./angular-animate');
 module.exports = 'ngAnimate';
 
-},{"./angular-animate":13}],15:[function(require,module,exports){
+},{"./angular-animate":15}],17:[function(require,module,exports){
 /**
  * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
@@ -3758,11 +3822,11 @@ angular.module('ngSanitize').filter('linky', ['$sanitize', function($sanitize) {
 
 })(window, window.angular);
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 require('./angular-sanitize');
 module.exports = 'ngSanitize';
 
-},{"./angular-sanitize":15}],17:[function(require,module,exports){
+},{"./angular-sanitize":17}],19:[function(require,module,exports){
 /**
  * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
@@ -30072,11 +30136,11 @@ var minlengthDirective = function() {
 })(window, document);
 
 !window.angular.$$csp() && window.angular.element(document).find('head').prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}</style>');
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 require('./angular');
 module.exports = angular;
 
-},{"./angular":17}],19:[function(require,module,exports){
+},{"./angular":19}],21:[function(require,module,exports){
 /**
 * geoJSON validation according to the GeoJSON spefication Version 1
 * @module geoJSONValidation
@@ -30961,7 +31025,7 @@ module.exports = angular;
 
 })(typeof exports === 'undefined'? this['GJV']={}: exports);
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -42564,7 +42628,7 @@ module.exports = angular;
 }.call(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],21:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 (function (global){
 //! moment.js
 //! version : 2.9.0
@@ -45611,7 +45675,7 @@ module.exports = angular;
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var esprima = require('esprima'),
   escodegen = require('escodegen'),
   traverse = require('traverse');
@@ -45869,7 +45933,7 @@ function wrapInRun(code, type, tick) {
 
 module.exports = instrument;
 
-},{"escodegen":23,"esprima":41,"traverse":42}],23:[function(require,module,exports){
+},{"escodegen":25,"esprima":43,"traverse":44}],25:[function(require,module,exports){
 (function (global){
 /*
   Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -48431,7 +48495,7 @@ module.exports = instrument;
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./package.json":40,"estraverse":24,"esutils":28,"source-map":29}],24:[function(require,module,exports){
+},{"./package.json":42,"estraverse":26,"esutils":30,"source-map":31}],26:[function(require,module,exports){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -49278,7 +49342,7 @@ module.exports = instrument;
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -49424,7 +49488,7 @@ module.exports = instrument;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*
   Copyright (C) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2014 Ivan Nikulin <ifaaan@gmail.com>
@@ -49527,7 +49591,7 @@ module.exports = instrument;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -49666,7 +49730,7 @@ module.exports = instrument;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":26}],28:[function(require,module,exports){
+},{"./code":28}],30:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -49701,7 +49765,7 @@ module.exports = instrument;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./ast":25,"./code":26,"./keyword":27}],29:[function(require,module,exports){
+},{"./ast":27,"./code":28,"./keyword":29}],31:[function(require,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -49711,7 +49775,7 @@ exports.SourceMapGenerator = require('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = require('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = require('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":35,"./source-map/source-map-generator":36,"./source-map/source-node":37}],30:[function(require,module,exports){
+},{"./source-map/source-map-consumer":37,"./source-map/source-map-generator":38,"./source-map/source-node":39}],32:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -49810,7 +49874,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":38,"amdefine":39}],31:[function(require,module,exports){
+},{"./util":40,"amdefine":41}],33:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -49954,7 +50018,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./base64":32,"amdefine":39}],32:[function(require,module,exports){
+},{"./base64":34,"amdefine":41}],34:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -49998,7 +50062,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":39}],33:[function(require,module,exports){
+},{"amdefine":41}],35:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -50080,7 +50144,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":39}],34:[function(require,module,exports){
+},{"amdefine":41}],36:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2014 Mozilla Foundation and contributors
@@ -50168,7 +50232,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":38,"amdefine":39}],35:[function(require,module,exports){
+},{"./util":40,"amdefine":41}],37:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -50745,7 +50809,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":30,"./base64-vlq":31,"./binary-search":33,"./util":38,"amdefine":39}],36:[function(require,module,exports){
+},{"./array-set":32,"./base64-vlq":33,"./binary-search":35,"./util":40,"amdefine":41}],38:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -51147,7 +51211,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":30,"./base64-vlq":31,"./mapping-list":34,"./util":38,"amdefine":39}],37:[function(require,module,exports){
+},{"./array-set":32,"./base64-vlq":33,"./mapping-list":36,"./util":40,"amdefine":41}],39:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -51563,7 +51627,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./source-map-generator":36,"./util":38,"amdefine":39}],38:[function(require,module,exports){
+},{"./source-map-generator":38,"./util":40,"amdefine":41}],40:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -51884,7 +51948,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":39}],39:[function(require,module,exports){
+},{"amdefine":41}],41:[function(require,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -52187,7 +52251,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,require('_process'),"/node_modules/terrarium/node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"_process":50,"path":49}],40:[function(require,module,exports){
+},{"_process":52,"path":51}],42:[function(require,module,exports){
 module.exports={
   "name": "escodegen",
   "description": "ECMAScript code generator",
@@ -52276,7 +52340,7 @@ module.exports={
   "readme": "ERROR: No README data found!"
 }
 
-},{}],41:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 /*
   Copyright (C) 2013 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2013 Thaddee Tyl <thaddee.tyl@gmail.com>
@@ -56050,7 +56114,7 @@ parseStatement: true, parseSourceElement: true */
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],42:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 var traverse = module.exports = function (obj) {
     return new Traverse(obj);
 };
@@ -56366,11 +56430,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     return key in obj;
 };
 
-},{}],43:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 module.exports.Browser = require('./terrarium_browser.js');
 module.exports.Node = require('./terrarium_node.js');
 
-},{"./terrarium_browser.js":44,"./terrarium_node.js":45}],44:[function(require,module,exports){
+},{"./terrarium_browser.js":46,"./terrarium_node.js":47}],46:[function(require,module,exports){
 var instrument = require('./instrument');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
@@ -56477,7 +56541,7 @@ Terrarium.prototype.setInstrument = function(thisTick, instrumented) {
 
 module.exports = Terrarium;
 
-},{"./instrument":22,"events":47,"util":52}],45:[function(require,module,exports){
+},{"./instrument":24,"events":49,"util":54}],47:[function(require,module,exports){
 var instrument = require('./instrument');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
@@ -56551,9 +56615,9 @@ Terrarium.prototype.destroy = function() {
 
 module.exports = Terrarium;
 
-},{"./instrument":22,"child_process":46,"events":47,"fs":46,"util":52}],46:[function(require,module,exports){
+},{"./instrument":24,"child_process":48,"events":49,"fs":48,"util":54}],48:[function(require,module,exports){
 
-},{}],47:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -56856,7 +56920,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],48:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -56881,7 +56945,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],49:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -57109,7 +57173,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":50}],50:[function(require,module,exports){
+},{"_process":52}],52:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -57169,14 +57233,14 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],51:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],52:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -57766,4 +57830,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":51,"_process":50,"inherits":48}]},{},[6]);
+},{"./support/isBuffer":53,"_process":52,"inherits":50}]},{},[6]);

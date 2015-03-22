@@ -10,7 +10,7 @@
 </form>
 
 <table class='pure-table pure-table-horizontal'>
-    <tr ng-repeat='example in examples | filter:example_search'>
+    <tr ng-repeat='example in examples.examples | filter:example_search'>
         <td>{{example.name}}</td>
         <td>
             <div ng-click='loadExample(example)' class='pure-button' href='#'>Load</div>

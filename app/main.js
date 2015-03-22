@@ -28,6 +28,8 @@ require('./services/timerService');
 require('./services/geometriesService');
 require('./services/sessionService');
 require('./services/notificationService');
+require('./services/examplesService');
+require('./services/docService');
 require('./directives/playgroundAce');
 require('./directives/playgroundTabs');
 require('./directives/cleanDocs');

@@ -6,13 +6,14 @@ angular.module('turf-playground').controller('MainCtrl', function (
     geometriesService,
     sessionService,
     notificationService,
-    editorService
+    editorService,
+    docService
 ) {
     $scope.selected_tab = {name: 'editor'};
     $scope.notifications = notificationService.messages;
     $scope.geometries = geometriesService
     $scope.session_id = null;
-    $scope.documentation = {show: false, content: ''}
+    $scope.documentation = docService
     $scope.last_iframe = null;
 
     // TODO: make this a directive. It shouldn't be in here.
@@ -47,6 +48,17 @@ angular.module('turf-playground').controller('MainCtrl', function (
     $scope.new = function () {
         var loc = $location.absUrl().split("#");
         window.open(loc[0]);
+    };
+
+    $scope.toggleDocs = function () {
+        var show = docService.toggleShow();
+
+        if (show) {
+            var ed = editorService.getEditor();
+            var selected = ed.session.getTextRange(ed.getSelectionRange());
+
+            docService.findDoc(selected);
+        }
     };
 
     /**

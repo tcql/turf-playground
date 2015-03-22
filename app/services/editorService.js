@@ -13,14 +13,25 @@ angular.module('turf-playground').service('editorService', [
 '$mapFeatures',
 'geometriesService',
 'timerService',
-function ($rootScope, map, features, geometries, timer) {
+'examplesService',
+'docService',
+function ($rootScope, map, features, geometries, timer, examples, docs) {
     var self = this;
     var editor = null;
     var container = null;
 
     this.setEditor = function(ace) {
         editor = ace;
+        editor.commands.addCommand({
+            name: 'findDocs',
+            bindKey: {win: 'Ctrl-I',  mac: 'Command-I'},
+            exec: function() {
+                var selected = editor.session.getTextRange(editor.getSelectionRange());
+                docs.findDoc(selected);
+            }
+        });
     };
+
     this.getEditor = function() {
         return editor;
     };
@@ -39,7 +50,8 @@ function ($rootScope, map, features, geometries, timer) {
             container.destroy();
         }
         container = null;
-    }
+    };
+
     this.run = function () {
         var code = self.getText();
 
