@@ -34,7 +34,22 @@ body {
     -moz-border-radius-bottomright: 8px;
     /*border-top-right-radius: 8px;*/
     border-bottom-right-radius: 8px;
-    padding:10px 20px;
+}
+
+#documentation .content {
+    position:absolute;
+    top:10px;
+    left:20px;
+    right:20px;
+    bottom:10px;
+    overflow:auto;
+    font-size:0.85em;
+    padding:0px 16px 0px 0px;
+}
+
+#documentation .content table {
+    border-collapse: collapse;
+    border-spacing: 2;
 }
 
 #pane {

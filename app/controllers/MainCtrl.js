@@ -12,6 +12,7 @@ angular.module('turf-playground').controller('MainCtrl', function (
     $scope.notifications = notificationService.messages;
     $scope.geometries = geometriesService
     $scope.session_id = null;
+    $scope.documentation = {show: false, content: ''}
     $scope.last_iframe = null;
 
     // TODO: make this a directive. It shouldn't be in here.

@@ -19,6 +19,8 @@ angular.module('turf-playground').controller('ExamplesCtrl',
     $scope.loadExample = function (example) {
         $scope.geometries.emptyDraw();
         editorService.setText(example.example, 1);
+        $scope.documentation.show = true;
+        $scope.documentation.content = example.desc;
         $scope.selected_tab.name = 'editor';
     };
 }]);
