@@ -36,3 +36,4 @@ require('./directives/playgroundTabs');
 require('./directives/cleanDocs');
 require('./controllers/MainCtrl');
 require('./controllers/ExamplesCtrl');
+require('./controllers/DocumentationCtrl');

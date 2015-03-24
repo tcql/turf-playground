@@ -61,6 +61,10 @@ body {
     border-spacing: 2;
 }
 
+#documentation .ui-select-container {
+    margin-top: 10px;
+}
+
 #pane {
     position: absolute;
     background-color:#eee;

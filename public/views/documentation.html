@@ -1,5 +1,5 @@
 <div class='content'>
-    <a ng-click='documentation.reset()'
+    <a ng-click='reset()'
         ng-show='!documentation.show_default'>
         <i class='fa fa-angle-double-left'></i> Back
     </a>
@@ -12,11 +12,11 @@
         <p>
             To use Quick Docs, select a line of text which contains a turf function in the editor and either click the <strong>Quick Docs</strong> button or press Ctrl+I
         </p>
-        <img ng-show='documentation.search == ""' src='doc-preview.gif' />
+        <img src='doc-preview.gif' />
 
-        <ui-select ng-model="documentation.selected" theme="selectize" ng-disabled="disabled" style="min-width: 300px;">
+        <ui-select ng-model="search.selected" theme="selectize" ng-disabled="disabled" style="min-width: 300px;">
             <ui-select-match placeholder="Search documentation">{{$select.selected.name}}</ui-select-match>
-            <ui-select-choices repeat="ex in documentation.examples.examples | filter: {name: $select.search}">
+            <ui-select-choices repeat="ex in examples.examples | filter: {name: $select.search}">
               <div ng-bind-html="ex.name | highlight: $select.search"></div>
             </ui-select-choices>
         </ui-select>

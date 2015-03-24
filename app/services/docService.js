@@ -1,9 +1,8 @@
-angular.module('turf-playground').service('docService', function ($rootScope, examplesService) {
+angular.module('turf-playground').service('docService', function ($rootScope, $sce, examplesService) {
     var self = this;
     this.show = false;
     this.content = '';
     this.show_default = true;
-    this.selected = null;
     this.examples = examplesService;
 
     this.reset = function () {
@@ -18,7 +17,7 @@ angular.module('turf-playground').service('docService', function ($rootScope, ex
 
     this.setContent = function (content) {
         self.show_default = false;
-        self.content = content;
+        self.content = $sce.trustAsHtml(content);
     }
 
     this.findDoc = function(selected) {

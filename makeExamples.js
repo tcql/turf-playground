@@ -21,7 +21,6 @@ function getExample(comments) {
 
 var examples = [];
 dirs.forEach(function(dir) {
-    // console.log(dir);
     var path = base+"/"+dir;
     if (dir.indexOf('turf-') == -1 || !fs.statSync(path).isDirectory()) {
         return;
@@ -29,11 +28,19 @@ dirs.forEach(function(dir) {
 
     var contents = fs.readFileSync(path+"/index.js", 'utf-8');
     var comment = dox.parseComments(contents);
-
     var example = getExample(comment);
     if (example) {
+        var parts = dir.split("-");
+        var methodParts = parts.slice(1);
+        for (var i = 1; i < methodParts.length; i++) {
+            methodParts[i] = methodParts[i].charAt(0).toUpperCase() + methodParts[i].slice(1);
+        }
+
+        var func_name = parts[0] + "." + methodParts.join("");
+
         examples.push({
             name: dir,
+            function_name: func_name,
             example: example,
             desc: marked(doxme(comment))
         });
