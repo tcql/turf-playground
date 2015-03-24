@@ -3,7 +3,7 @@ angular.module('turf-playground').service('docService', function ($rootScope, ex
     this.show = false;
     this.content = '';
     this.show_default = true;
-    this.search = '';
+    this.selected = null;
     this.examples = examplesService;
 
     this.reset = function () {

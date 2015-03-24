@@ -14,9 +14,11 @@
         </p>
         <img ng-show='documentation.search == ""' src='doc-preview.gif' />
 
-        <form class='pure-form' style='margin-top:10px;'>
-            <label>Search Docs</label>
-            <input ng-model='documentation.search' type='text' />
-        </form>
+        <ui-select ng-model="documentation.selected" theme="selectize" ng-disabled="disabled" style="min-width: 300px;">
+            <ui-select-match placeholder="Search documentation">{{$select.selected.name}}</ui-select-match>
+            <ui-select-choices repeat="ex in documentation.examples.examples | filter: {name: $select.search}">
+              <div ng-bind-html="ex.name | highlight: $select.search"></div>
+            </ui-select-choices>
+        </ui-select>
     </span>
 </div>

@@ -1,10 +1,11 @@
 angular = require('angular');
 require('angular-animate');
 require('angular-sanitize');
+require('./vendor/ui-select');
 require('./vendor/angular-growl');
 window._ = require('lodash');
 
-angular.module('turf-playground', ['ngAnimate', 'angular-growl', 'ngSanitize']).config(function ($provide) {
+angular.module('turf-playground', ['ui.select', 'ngAnimate', 'angular-growl', 'ngSanitize']).config(function ($provide) {
     L.mapbox.accessToken = 'pk.eyJ1IjoidGNxbCIsImEiOiJaSlZ6X3JZIn0.mPwXgf3BvAR4dPuBB3ypfA'
     var map = L.mapbox.map('map', 'tcql.lffb55nc');
     var mapFeatures = L.featureGroup().addTo(map);
