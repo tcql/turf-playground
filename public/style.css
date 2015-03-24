@@ -1,5 +1,9 @@
 /* TODO: clean up, remove a bunch of unnecessary ids */
 
+a {
+    cursor:pointer;
+}
+
 body {
     overflow:hidden;
 }
@@ -38,6 +42,9 @@ body {
     border-bottom-right-radius: 8px;
 }
 
+#documentation .content img {
+    width:100%;
+}
 #documentation .content {
     position:absolute;
     top:10px;

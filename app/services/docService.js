@@ -2,22 +2,23 @@ angular.module('turf-playground').service('docService', function ($rootScope, ex
     var self = this;
     this.show = false;
     this.content = '';
-
-    var default_content =
-        "<h4>Welcome to turfjs.party Quick Docs</h4>" +
-        "<p>" +
-        "    To use Quick Docs, select a line of text which contains a turf" +
-        "    function in the editor and either click the <strong>Quick Docs</strong>" +
-        "    button or press Ctrl+I" +
-        "</p>";
+    this.show_default = true;
+    this.search = '';
+    this.examples = examplesService;
 
     this.reset = function () {
-        self.content = default_content;
+        self.show_default = true;
+        self.content = '';
     }
 
     this.toggleShow = function () {
         self.show = !self.show;
         return self.show;
+    }
+
+    this.setContent = function (content) {
+        self.show_default = false;
+        self.content = content;
     }
 
     this.findDoc = function(selected) {
@@ -28,11 +29,14 @@ angular.module('turf-playground').service('docService', function ($rootScope, ex
             // turf method (if it exists)
             var ex = examplesService.findExample(matches[0]);
             if (ex) {
-                self.content = ex.desc;
+                self.setContent(ex.desc);
             }
         }
         self.show = true;
-        $rootScope.$apply();
+
+        if (!$rootScope.$$phase) {
+            $rootScope.$apply();
+        }
     }
 
     this.reset();

@@ -15,8 +15,6 @@ angular.module('turf-playground').controller('ExamplesCtrl',
     $scope.loadExample = function (example) {
         $scope.geometries.emptyDraw();
         editorService.setText(example.example, 1);
-        // $scope.documentation.show = true;
-        // $scope.documentation.content = example.desc;
         $scope.selected_tab.name = 'editor';
     };
 }]);
@@ -206,22 +204,23 @@ angular.module('turf-playground').service('docService', function ($rootScope, ex
     var self = this;
     this.show = false;
     this.content = '';
-
-    var default_content =
-        "<h4>Welcome to turfjs.party Quick Docs</h4>" +
-        "<p>" +
-        "    To use Quick Docs, select a line of text which contains a turf" +
-        "    function in the editor and either click the <strong>Quick Docs</strong>" +
-        "    button or press Ctrl+I" +
-        "</p>";
+    this.show_default = true;
+    this.search = null;
+    this.examples = examplesService;
 
     this.reset = function () {
-        self.content = default_content;
+        self.show_default = true;
+        self.content = '';
     }
 
     this.toggleShow = function () {
         self.show = !self.show;
         return self.show;
+    }
+
+    this.setContent = function (content) {
+        self.show_default = false;
+        self.content = content;
     }
 
     this.findDoc = function(selected) {
@@ -232,11 +231,14 @@ angular.module('turf-playground').service('docService', function ($rootScope, ex
             // turf method (if it exists)
             var ex = examplesService.findExample(matches[0]);
             if (ex) {
-                self.content = ex.desc;
+                self.setContent(ex.desc);
             }
         }
         self.show = true;
-        $rootScope.$apply();
+
+        if (!$rootScope.$$phase) {
+            $rootScope.$apply();
+        }
     }
 
     this.reset();
@@ -295,7 +297,8 @@ function ($rootScope, map, features, geometries, timer, examples, docs) {
             container.destroy();
         }
         container = null;
-    }
+    };
+
     this.run = function () {
         var code = self.getText();
 

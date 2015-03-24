@@ -1,0 +1,22 @@
+<div class='content'>
+    <a ng-click='documentation.reset()'
+        ng-show='!documentation.show_default'>
+        <i class='fa fa-angle-double-left'></i> Back
+    </a>
+    <span
+        ng-show='!documentation.show_default'
+        ng-bind-html="documentation.content"
+        clean-docs></span>
+    <span ng-show='documentation.show_default'>
+        <h4>Welcome to turfjs.party Quick Docs</h4>
+        <p>
+            To use Quick Docs, select a line of text which contains a turf function in the editor and either click the <strong>Quick Docs</strong> button or press Ctrl+I
+        </p>
+        <img ng-show='documentation.search == ""' src='doc-preview.gif' />
+
+        <form class='pure-form' style='margin-top:10px;'>
+            <label>Search Docs</label>
+            <input ng-model='documentation.search' type='text' />
+        </form>
+    </span>
+</div>
