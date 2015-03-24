@@ -29,6 +29,7 @@ body {
     position:absolute;
     top:0px;
     right:180px;
+    min-width:400px;
     left: 50%;
     bottom: 80px;
     background-color: #444;
