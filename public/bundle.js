@@ -455,8 +455,6 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
             },
             style: function(feature) {
                 var style = getStyle(feature.properties);
-                console.log("setting style")
-                console.log(style);
                 return style;
             }
         });
@@ -513,13 +511,13 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     });
 
     this.updateGeometryName = function (geom) {
-        $scope.watching_geojsons = false;
-        delete $scope.geojsons[geom.name];
-        $scope.watching_geojsons = true;
-        $scope.geojsons[geom.new_name] = geom.geojson;
+        geom.name = geom.new_name;
     };
 
     this.deleteGeometry = function(geom) {
+        if (geom.name) {
+            geom = geom.geom;
+        }
         _.remove($scope.geometries, {geom: geom});
         $mapFeatures.removeLayer(geom);
     };
