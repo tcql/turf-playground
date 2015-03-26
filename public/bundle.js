@@ -454,7 +454,10 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                 layer.bindPopup(table);
             },
             style: function(feature) {
-                return getStyle(feature.properties);
+                var style = getStyle(feature.properties);
+                console.log("setting style")
+                console.log(style);
+                return style;
             }
         });
 
