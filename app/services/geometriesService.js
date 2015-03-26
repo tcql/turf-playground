@@ -4,49 +4,17 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     $scope = $rootScope.$new()
     // Format that's easier for the frontend
     $scope.geometries = [];
-    // Our authoritative list of geometries. It's watched,
-    // so if anything is added in any way (editor or draw tools),
-    // it gets updated properly. This allows async within the editor
-    // to modify geometries
-    $scope.geojsons = {};
     $scope.geom_id = 0;
-
-    $scope.watching_geojsons = true;
-
-    $scope.$watch("geojsons", function (geojsons, old) {
-        if ($scope.watching_geojsons) {
-            $scope.watching_geojsons = false;
-            // TODO: Only clear the layers that changed?
-            // this could get really slow, if we're testing out
-            // heavy stuff
-            $mapFeatures.clearLayers();
-            $scope.geometries = [];
-            _.each(geojsons, function (val, key) {
-                try {
-                    var geom = self.addToMap(val, key);
-                } catch (e) {
-                    // TODO: error console / popup
-                    console.log(e)
-                }
-            });
-            $scope.watching_geojsons = true;
-            if ($mapFeatures.getLayers().length > 0) {
-                if (!$map.getBounds().contains($mapFeatures.getBounds())) {
-                    $map.fitBounds($mapFeatures);
-                }
-            }
-        }
-    }, true);
 
     // Handles adding a geometry to the geojsons list. Used
     // when adding geometries from drawn / edited map layers
-    var addGeometry = function(layer, name) {
+    this.addGeometry = function(name, layer) {
         if (!name) {
             $scope.geom_id++;
             name = "feature"+$scope.geom_id
         }
         var geojson = layer.toGeoJSON();
-        $scope.geojsons[name] = geojson;
+
         $scope.geometries.push({
             name: name,
             new_name: name,
@@ -55,11 +23,17 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
         });
     };
 
-
     // Adds stored geojson back to the map. If the resultant
     // geometry is a single element wrapped in a FeatureGroup,
     // only the element itself is added to the geojsons list
-    this.addToMap = function (json, name) {
+    this.addToMap = function (name, json) {
+        if (name) {
+            var matches = _.where($scope.geometries, {name: name})
+            _.each(matches, function (elem) {
+                self.deleteGeometry(elem.geom);
+            });
+        }
+
         var geom = L.geoJson(json, {
             onEachFeature: function (feature, layer) {
 
@@ -89,12 +63,18 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
 
         if (geom.getLayers().length == 1) {
             geom.eachLayer(function(elem) {
-                addGeometry(elem, name);
+                self.addGeometry(name, elem);
                 $mapFeatures.addLayer(elem);
             });
         } else {
-            addGeometry(geom, name)
+            self.addGeometry(name, geom)
             $mapFeatures.addLayer(geom)
+        }
+
+        if ($mapFeatures.getLayers().length > 0) {
+            if (!$map.getBounds().contains($mapFeatures.getBounds())) {
+                $map.fitBounds($mapFeatures);
+            }
         }
 
         if (!$scope.$$phase) {
@@ -104,7 +84,8 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
 
     // When a shape is created using L.Draw, add it to our internal geometries list
     $map.on('draw:created', function(e) {
-        addGeometry(e.layer)
+        self.addGeometry(null, e.layer);
+        $mapFeatures.addLayer(e.layer)
         $scope.$apply();
     });
 
@@ -113,7 +94,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
         layers.eachLayer(function (layer) {
             var geoms = _.where($scope.geometries, {geom: layer});
             _.each(geoms, function (elem) {
-                $scope.geojsons[elem.name] = layer.toGeoJSON();
+                elem.geojson = layer.toGeoJSON()
             });
         });
     });
@@ -138,18 +119,26 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     };
 
     this.deleteGeometry = function(geom) {
-        delete $scope.geojsons[geom.name];
-        $mapFeatures.removeLayer(geom.geom);
+        _.remove($scope.geometries, {geom: geom});
+        $mapFeatures.removeLayer(geom);
     };
 
     this.emptyDraw = function () {
+        _.each($scope.geometries, function (elem) {
+            self.deleteGeometry(elem.geom)
+        });
         $scope.$emit("geometries:emptied");
-        $scope.geojsons = {};
     };
+
+    this.getAsGeoJSON = function () {
+        var obj = {};
+        _.each($scope.geometries, function (elem) {
+            obj[elem.name] = elem.geojson;
+        });
+        return obj;
+    };
+
     this.getGeometries = function () {
         return $scope.geometries;
-    };
-    this.getGeojsons = function () {
-        return $scope.geojsons;
     };
 });

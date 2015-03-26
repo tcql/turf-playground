@@ -26,9 +26,8 @@ angular.module('turf-playground').controller('MainCtrl', function (
         $scope.geometries.emptyDraw();
         editorService.setText(result.text);
         _.each(result.geometry, function(val, key) {
-            $scope.geometries.addToMap(val, name)
+            $scope.geometries.addToMap(key, val)
         });
-        $scope.geometries.geojsons = result.geometry;
         $scope.selected_tab.name = 'editor';
     });
 
@@ -70,7 +69,7 @@ angular.module('turf-playground').controller('MainCtrl', function (
         sessionService.save(
             $scope.session_id,
             editorService.getText(),
-            geometriesService.getGeojsons()
+            geometriesService.getAsGeoJSON()
         ).then(function(res) {
             if (res.status == 'error') {
                 notificationService.notify('error', res.data)

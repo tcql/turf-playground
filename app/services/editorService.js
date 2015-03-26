@@ -63,7 +63,7 @@ function ($rootScope, map, features, geometries, timer, examples, docs) {
                 mapFeatures: features,
                 turf: turf,
                 L: L,
-                g: geometries.getGeojsons(),
+                g: null, //geometries.getGeojsons(),
                 _: _,
                 // Angular-aware setTimeout and setInterval,
                 // with the added bonus of letting us globally cancel
@@ -75,12 +75,12 @@ function ($rootScope, map, features, geometries, timer, examples, docs) {
 
         container.on('data', function (dt) {
             var output = {};
-            // var geojsons = geometries.getGeojsons();
+
             _.each(dt, function (val, key) {
                 // grab the most recent output
                 var elem = val[0];
                 if (validator.valid(elem.val)) {
-                    geometries.addToMap(elem.val, elem.name)
+                    geometries.addToMap(elem.name, elem.val)
                 } else {
                     console.log("not valid geojson")
                 }
