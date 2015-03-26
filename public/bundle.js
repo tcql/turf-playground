@@ -347,8 +347,7 @@ function ($rootScope, map, features, geometries, timer, examples, docs) {
 
         container.on('data', function (dt) {
             var output = {};
-            console.log(dt);
-            // var geojsons = geometries.getGeojsons();
+
             _.each(dt, function (val, key) {
                 // grab the most recent output
                 var elem = val[0];
@@ -398,6 +397,20 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     $scope.geometries = [];
     $scope.geom_id = 0;
 
+    var getStyle = function (style) {
+        if (!style) {
+            style = {};
+        }
+        var def = {
+            color:'#444',
+            fillColor: '#0078e7',
+            weight:2,
+            opacity:0.7,
+            fillOpacity: 0.4
+        };
+        return _.extend(def, style);
+    }
+
     // Handles adding a geometry to the geojsons list. Used
     // when adding geometries from drawn / edited map layers
     this.addGeometry = function(name, layer) {
@@ -419,8 +432,6 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     // geometry is a single element wrapped in a FeatureGroup,
     // only the element itself is added to the geojsons list
     this.addToMap = function (name, json) {
-        console.log("adding!")
-        console.log(json);
         if (name) {
             var matches = _.where($scope.geometries, {name: name})
             _.each(matches, function (elem) {
@@ -443,15 +454,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
                 layer.bindPopup(table);
             },
             style: function(feature) {
-                var def = {
-                    color:'#444',
-                    fillColor: '#0078e7',
-                    weight:2,
-                    opacity:0.7,
-                    fillOpacity: 0.4
-                };
-                return _.extend(def, feature.properties);
-                // return feature.properties;
+                return getStyle(feature.properties);
             }
         });
 
@@ -479,6 +482,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     // When a shape is created using L.Draw, add it to our internal geometries list
     $map.on('draw:created', function(e) {
         self.addGeometry(null, e.layer);
+        e.layer.setStyle(getStyle());
         $mapFeatures.addLayer(e.layer)
         $scope.$apply();
     });
