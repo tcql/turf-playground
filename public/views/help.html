@@ -27,15 +27,8 @@ Geometries can be accessed in the <em>Editor</em> environment by using the <stro
 <div class='help-block'>
 <h4>Adding Geometries in the Editor</h4>
 <p>
-Geometries can be added in the <em>Editor</em> either by using the <strong>g</strong> object or by using <strong>//=</strong> comments:
+Geometries can be added in the <em>Editor</em> by using <strong>//=</strong> comments:
 </p>
-<pre class='prettyprint'>
-var feature1 = // some geojson
-g.feature1 = feature1;
-</pre>
-
-is the same as
-
 <pre class='prettyprint'>
 var feature1 = // some geojson
 //=feature1
@@ -48,8 +41,10 @@ var feature1 = // some geojson
 Geometries will be styled using Leaflet's style options. To set styles in the <em>Editor</em>, add leaflet style options to a feature's properties:
 </p>
 <pre class='prettyprint'>
-g.feature1.properties.color = "#ff00ff";
-g.feature1.properties.weight = 2;
+feature1.properties.color = "#ff00ff";
+feature1.properties.weight = 2;
+
+//=feature1
 </pre>
 </div>
 
