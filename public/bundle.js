@@ -425,7 +425,6 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
             geojson: geojson,
             geom: layer
         });
-        console.log($scope.geometries);
     };
 
     // Adds stored geojson back to the map. If the resultant
@@ -527,8 +526,6 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
         _.each(list, function (elem) {
             if (elem && elem.geom) {
                 self.deleteGeometry(elem.geom)
-            } else {
-                console.log(elem)
             }
         });
         $scope.$emit("geometries:emptied");
