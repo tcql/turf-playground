@@ -5,7 +5,7 @@ angular.module('turf-playground').service('timerService', function ($timeout, $i
     this.intervals = [];
 
     this.timeout = function () {
-        self.timeouts.push($timout.apply(this, arguments));
+        self.timeouts.push($timeout.apply(this, arguments));
     };
 
     this.interval = function () {

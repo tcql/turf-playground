@@ -288,9 +288,11 @@ angular.module('turf-playground').service('editorService', [
 'examplesService',
 'docService',
 function ($rootScope, map, features, geometries, timer, examples, docs) {
+    var $scope = $rootScope.$new();
     var self = this;
     var editor = null;
     var container = null;
+    var prevWatch = null;
 
     this.setEditor = function(ace) {
         editor = ace;
@@ -314,6 +316,10 @@ function ($rootScope, map, features, geometries, timer, examples, docs) {
         return editor.getValue();
     };
     this.stop = function () {
+        if (prevWatch) {
+            prevWatch();
+        }
+
         timer.clearIntervals();
         timer.clearTimeouts();
 
@@ -329,13 +335,15 @@ function ($rootScope, map, features, geometries, timer, examples, docs) {
 
         self.stop();
 
+        $scope.geoms = geometries.getAsGeoJSON();
+
         container = new Terrarium.Browser({
             sandbox: {
                 map: map,
                 mapFeatures: features,
                 turf: turf,
                 L: L,
-                g: null, //geometries.getGeojsons(),
+                g: $scope.geoms,
                 _: _,
                 // Angular-aware setTimeout and setInterval,
                 // with the added bonus of letting us globally cancel
@@ -354,12 +362,40 @@ function ($rootScope, map, features, geometries, timer, examples, docs) {
                 if (validator.valid(elem.val)) {
                     geometries.addToMap(elem.name, elem.val)
                 } else {
-                    console.log("not valid geojson")
+                    console.log("Editor Logged "+elem.name+": ")
+                    console.log(elem.val);
                 }
             });
         });
 
+        // If the `g` object is changed within the editor, update our
+        // geometries list. This should probably be mostly wrapped up
+        // inside the geometriesService
+        prevWatch = $scope.$watch("geoms", function (newGeoms, oldGeoms) {
+            var changed = {};
+            // Find only geoms that were changed. This feels sorta hacky
+            _.each(newGeoms, function (val, name) {
+                if (!oldGeoms[name] || !_.isEqual(val, oldGeoms[name])) {
+                    changed[name] = val;
+                }
+            });
+            _.each(changed, function(val, name) {
+                if (validator.valid(val)) {
+                    geometries.addToMap(name, val)
+                } else {
+                    console.log("not valid geojson")
+                }
+            });
+        }, true);
+
         container.run(code);
+
+        // Since the Container isn't hooked up with angular,
+        // we have no way of knowing when the `g` object has been
+        // modified. So this interval forces angular to periodically
+        // re-$apply, so that the `g` object watch will be re-evaluated
+        // if necessary
+        timer.interval(function(){ }, 1000);
     };
 
     // IF geometries are cleared (by hitting the "Clear Map")
@@ -604,7 +640,7 @@ angular.module('turf-playground').service('timerService', function ($timeout, $i
     this.intervals = [];
 
     this.timeout = function () {
-        self.timeouts.push($timout.apply(this, arguments));
+        self.timeouts.push($timeout.apply(this, arguments));
     };
 
     this.interval = function () {

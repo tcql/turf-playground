@@ -30,8 +30,14 @@ Geometries can be accessed in the <em>Editor</em> environment by using the <stro
 Geometries can be added in the <em>Editor</em> by using <strong>//=</strong> comments:
 </p>
 <pre class='prettyprint'>
-var feature1 = // some geojson
+var feature1 = {"type": "Point", "coordinates", [0, 0]};
 //=feature1
+</pre>
+<p>
+Or by using the <strong>g</strong> object:
+</p>
+<pre class='prettyprint'>
+g.feature1 = {"type": "Point", "coordinates", [0, 0]};
 </pre>
 </div>
 
