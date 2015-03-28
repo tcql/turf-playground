@@ -419,13 +419,13 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
             name = "feature"+$scope.geom_id
         }
         var geojson = layer.toGeoJSON();
-
         $scope.geometries.push({
             name: name,
             new_name: name,
             geojson: geojson,
             geom: layer
         });
+        console.log($scope.geometries);
     };
 
     // Adds stored geojson back to the map. If the resultant
@@ -523,8 +523,13 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     };
 
     this.emptyDraw = function () {
-        _.each($scope.geometries, function (elem) {
-            self.deleteGeometry(elem.geom)
+        var list = $scope.geometries.slice();
+        _.each(list, function (elem) {
+            if (elem && elem.geom) {
+                self.deleteGeometry(elem.geom)
+            } else {
+                console.log(elem)
+            }
         });
         $scope.$emit("geometries:emptied");
     };
