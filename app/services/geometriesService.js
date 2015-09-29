@@ -91,7 +91,7 @@ angular.module('turf-playground').service('geometriesService', function ($rootSc
     // When a shape is created using L.Draw, add it to our internal geometries list
     $map.on('draw:created', function(e) {
         self.addGeometry(null, e.layer);
-        e.layer.setStyle(getStyle());
+        if (e.layer.setStyle) e.layer.setStyle(getStyle());
         $mapFeatures.addLayer(e.layer)
         $scope.$apply();
     });
