@@ -2,7 +2,7 @@
 
 ## What is this?
 
-turf-playground is a project designed to let you play around and learn [turf](http://turfjs.org) in the browser without worrying about setting up the boilerplate code to get started. The playground is hosted at [turfjs.party](http://turfjs.party).
+turf-playground is a project designed to let you play around and learn [turf](http://turfjs.org) in the browser without worrying about setting up the boilerplate code to get started.
 
 ## Contributing
 
@@ -11,7 +11,7 @@ turf-playground is a project designed to let you play around and learn [turf](ht
 turf-playground is built as a simple [AngularJS](http://angularjs.org) app. It uses [Browserify](http://browserify.org/) for building the compiled JS actually used by the site. Also:
 
 - [Dox](https://github.com/tj/dox) for parsing comments in the turf code to generate the example code library
-- [Terrarium](https://github.com/tmcw/terrarium) for running editor code and instrumentation
+- [Terrarium](https://github.com/lyzidiamond/terrarium) for running editor code and instrumentation
 - [ACE editor](http://ace.c9.io/) - the in-browser code editor
 
 #### Running
